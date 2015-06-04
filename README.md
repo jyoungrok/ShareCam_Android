@@ -2,7 +2,15 @@
 
 ShareCam android application
 
-# Error
+## Developed / Updated
+
+
+
+## Develop Plan
+
+
+
+## Error
 
 ##### Take pictures consecutively
 
