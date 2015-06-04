@@ -6,6 +6,7 @@ ShareCam android application
 
 > Take pictures consecutively
 
+
 > When camera activity show, push the home button 
 ```
 Process: com.claude.sharecam, PID: 17249
