@@ -1,0 +1,100 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.claude.sharecam.camera.PictureModifyActivity"
+    android:orientation="vertical">
+
+    <!-- action bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize">
+
+        <ImageView
+            android:id="@+id/cameraBtn"
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/shareBtn"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+    <!--3:4 layout -->
+    <com.claude.sharecam.camera.CameraFrameLayout
+
+        android:id="@+id/pictureModifyFrameLayout"
+        android:background="#000000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/pictureViewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </android.support.v4.view.ViewPager>
+        <TextView
+            android:gravity="center_horizontal"
+            android:id="@+id/viewPagerIndicator"
+            android:visibility="gone"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:background="#11FFFFFF"
+            android:layout_gravity="bottom"
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </com.claude.sharecam.camera.CameraFrameLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/deleteBtn"
+            android:scaleType="center"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:id="@+id/editBtn"
+            android:scaleType="center"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:id="@+id/androidShareBtn"
+            android:scaleType="center"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+        <ImageView
+            android:id="@+id/shareConfigBtn"
+            android:scaleType="center"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+
+    <!--<ImageView-->
+        <!--android:scaleType="fitStart"-->
+        <!--android:id="@+id/pictureImg"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--/>-->
+</LinearLayout>

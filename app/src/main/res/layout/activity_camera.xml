@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/cameraLayout"
+    >
+
+    <!-- top layout -->
+    <RelativeLayout
+        android:background="#FFFFFF"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"
+            android:id="@+id/extraFeatureBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_action_accept"/>
+
+        <LinearLayout
+            android:layout_centerInParent="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/flashBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/ic_action_flash_off"/>
+
+            <ImageView
+                android:id="@+id/contShootBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/ic_action_accept"/>
+
+            <ImageView
+                android:id="@+id/switchBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/ic_action_switch_camera"/>
+
+        </LinearLayout>
+
+        <ImageView
+            android:visibility="gone"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:id="@+id/multPictureAcceptBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_action_accept"/>
+    </RelativeLayout>
+
+    <com.claude.sharecam.camera.CameraFrameLayout
+
+        android:background="#000000"
+        android:id="@+id/cameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/multPictureText"
+            android:background="#000000"
+            android:layout_margin="10dp"
+            android:padding="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- horizontal layout -->
+        <RelativeLayout
+            android:background="@android:color/transparent"
+            android:visibility="gone"
+            android:id="@+id/horizontalLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:id="@+id/horizontalTopLayout"
+                android:layout_alignParentTop="true"
+                android:background="@color/camera_margin_normal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:id="@+id/horizontalBottomLayout"
+                android:background="@color/camera_margin_normal"
+                android:layout_alignParentBottom="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </RelativeLayout>
+
+        <!-- vertical layout -->
+        <RelativeLayout
+            android:background="@android:color/transparent"
+            android:visibility="gone"
+            android:id="@+id/verticalLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+
+                android:orientation="horizontal"
+                android:id="@+id/verticalLeftLayout"
+                android:layout_alignParentRight="true"
+                android:background="@color/camera_margin_transparent"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"/>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:id="@+id/verticalRightLayout"
+                android:background="@color/camera_margin_transparent"
+                android:layout_alignParentLeft="true"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"/>
+
+        </RelativeLayout>
+
+        <!-- 추가 기능 레이아웃 -->
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/extraFeatureLayout"
+            android:background="#FFFFFF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/gridBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:src="@mipmap/ic_action_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:gravity="center_horizontal|center_vertical"
+                    android:textSize="20sp"
+                    android:text="그리드"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/timerBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:src="@mipmap/ic_action_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+
+                    android:gravity="center_horizontal|center_vertical"
+                    android:textSize="20sp"
+                    android:text="타이머"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/oneTouchBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:src="@mipmap/ic_action_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:gravity="center_horizontal|center_vertical"
+                    android:textSize="20sp"
+                    android:text="원터치카메라"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tutorialBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:src="@mipmap/ic_action_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:gravity="center_horizontal|center_vertical"
+                    android:textSize="20sp"
+                    android:text="튜토리얼"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- 그리드 레이아웃 -->
+        <FrameLayout
+            android:background="@android:color/transparent"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/gridLayout">
+
+            <!-- 그리드(가로) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+                <LinearLayout
+                    android:background="#FFFFFF"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"></LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+                <LinearLayout
+                    android:background="#FFFFFF"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"></LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    />
+            </LinearLayout>
+
+            <!-- 그리드(세로) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    />
+                <LinearLayout
+                    android:background="#FFFFFF"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"/>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    />
+                <LinearLayout
+                    android:background="#FFFFFF"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"/>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    />
+            </LinearLayout>
+        </FrameLayout>
+
+
+        <!-- 타이머 -->
+        <TextView
+
+            android:gravity="center_horizontal|center_vertical"
+            android:visibility="gone"
+            android:id="@+id/timerText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="50sp"
+            android:textColor="#FFFFFF"
+            />
+
+
+        <!-- 연속촬영 설정 레이아웃 -->
+        <LinearLayout
+            android:id="@+id/contShootLayout"
+            android:visibility="gone"
+            android:background="#FFFFFF"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:padding="10dp"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:id="@+id/ratio34Btn"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/ratio34Text"
+                        android:text="3:4 비율 촬영"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+                <LinearLayout
+                    android:background="#000000"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"></LinearLayout>
+                <LinearLayout
+                    android:id="@+id/ratio11Btn"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/ratio11Text"
+                        android:text="1:1 비율 촬영"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/cont1Btn"
+                    android:layout_weight="1"
+                    android:src="@drawable/cont1_img"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" />
+                <ImageView
+                    android:id="@+id/cont2Vertical"
+                    android:layout_weight="1"
+                    android:src="@drawable/cont1_img"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" />
+                <ImageView
+                    android:id="@+id/cont3Vertical"
+                    android:layout_weight="1"
+                    android:src="@drawable/cont1_img"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" />
+                <ImageView
+                    android:id="@+id/cont4Btn"
+                    android:layout_weight="1"
+                    android:src="@drawable/cont1_img"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.claude.sharecam.camera.CameraFrameLayout>
+
+
+
+    <!-- bottom layout-->
+    <LinearLayout
+        android:orientation="vertical"
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+        <LinearLayout
+            android:padding="2dp"
+            android:background="#AAFFFFFF"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:src="@drawable/cont1_img"
+                android:id="@+id/directModeBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture"
+                />
+            <ImageView
+                android:layout_marginLeft="20dp"
+                android:src="@drawable/cont1_img"
+                android:id="@+id/onePictureModeBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture"
+                android:layout_marginRight="20dp"
+                />
+            <ImageView
+                android:src="@drawable/cont1_img"
+                android:id="@+id/multPictureModeBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture"
+                />
+        </LinearLayout>
+        <RelativeLayout
+            android:background="#FFFFFF"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ImageView
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:id="@+id/albumBtn"
+                android:src="@mipmap/ic_action_accept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+
+
+            <ImageView
+                android:layout_centerInParent="true"
+                android:src="@mipmap/ic_action_accept"
+                android:id="@+id/captureBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture"
+                />
+
+            <ImageView
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:id="@+id/shareConfigBtn"
+                android:src="@mipmap/ic_action_accept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+
+</LinearLayout>

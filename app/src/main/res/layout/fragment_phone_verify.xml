@@ -1,0 +1,84 @@
+<FrameLayout
+    tools:context="com.claude.sharecam.login.PhoneVerifyFragment"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:visibility="gone"
+        android:gravity="center_horizontal|center_vertical"
+        android:orientation="vertical"
+        android:id="@+id/phoneVerifyPgrLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/phoneVerifyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        style="@style/loginLayout"
+        android:orientation="vertical"
+        >
+
+
+        <Spinner
+            android:background="@color/login_spinner_bg"
+            android:id="@+id/countryCodeSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spinner_height" />
+
+
+        <EditText
+            style="@style/editText"
+            android:id="@+id/phoneNumberTxt"
+            android:hint="@string/login_edittext_phone_hint"
+            android:layout_marginTop="@dimen/normal_top_margin"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/edittext_height" />
+
+        <RelativeLayout
+            android:layout_marginTop="@dimen/normal_top_margin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/textViewBtn"
+                android:id="@+id/phoneVerifyNumBtn"
+                android:layout_alignParentRight="true"
+                android:text="@string/login_phone_verify_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/edittext_height" />
+            <EditText
+                android:layout_marginRight="@dimen/normal_side_margin"
+                style="@style/editText"
+                android:id="@+id/phoneVeriftNumTxt"
+                android:hint="@string/login_phone_verify_hint"
+                android:layout_toLeftOf="@id/phoneVerifyNumBtn"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/edittext_height"
+                />
+
+        </RelativeLayout>
+        <TextView
+            android:id="@+id/phoneVerifyNextBtn"
+            android:layout_marginTop="80dp"
+            android:text="@string/next"
+            style="@style/textViewBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/withoutPhoneVerifyBtn"
+            android:layout_marginTop="10dp"
+            android:text="@string/without_phone_verify"
+            style="@style/textViewBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+
+
+    </LinearLayout>
+</FrameLayout>

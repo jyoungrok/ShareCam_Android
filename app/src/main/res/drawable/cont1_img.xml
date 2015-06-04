@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@mipmap/ic_action_accept" android:state_pressed="true"/> <!-- selected -->
+    <item android:drawable="@mipmap/ic_action_accept" android:state_selected="true"/> <!-- selected -->
+    <item android:drawable="@mipmap/ic_action_flash_automatic"/> <!-- default -->
+</selector>

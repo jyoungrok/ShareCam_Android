@@ -1,0 +1,23 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@mipmap/login_bg"
+    tools:context="com.claude.sharecam.signup.SignUpActivity"
+    android:gravity="center">
+
+
+
+    <LinearLayout
+        android:background="#FFFFFF"
+        android:gravity="center_horizontal"
+        android:padding="10dp"
+        android:id="@+id/facebookSignInBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="페이스북 로그인 테스트"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</LinearLayout>

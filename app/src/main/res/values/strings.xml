@@ -1,0 +1,54 @@
+<resources>
+    <string name="app_name">ShareCam</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- dialog -->
+    <string name="phone_verify_message_sent">인증번호가 전송 되었습니다. 확인 후 입력해 주세요</string>
+    <string name="accept">확인</string>
+    <string name="cancel">취소</string>
+
+    <!-- toast server error -->
+    <string name="network_unavailable">네트워크 상태를 확인해 주세요.</string>
+    <string name="verification_number_not_matched">입력하신 인증번호가 옳지 않습니다.</string>
+    <string name="unknown_error_code">알려지지 않은 에러입니다.</string>
+    <string name="invalid_phone">전화번호가 옳지 않습니다.</string>
+    <string name="phone_already_exist">전화번호로 가입한 회원이 이미 존재합니다.</string>
+    <!--<string name="facebook_invalid_access_token">페이스북 로그인에 실패하였습니다.</string>-->
+
+    <!-- toast-->
+    <string name="not_availalbe_click_while_taking_picture_toast">촬영 중에는 클릭할 수 없습니다.</string>
+    <string name="you_should_fill_out">입력을 완료해야 합니다.</string>
+    <!-- facebook -->
+    <string name="facebook_app_id">912014918837079</string>
+
+    <!-- login -->
+    <string name="login_name_hint">이름</string>
+    <string name="login_edittext_phone_hint">전화번호</string>
+    <string name="login_phone_verify_hint">인증 번호</string>
+    <string name="login_phone_verify_btn">인증번호받기</string>
+    <string name="next">다음</string>
+    <string name="without_phone_verify">휴대폰 인증 없이 진행</string>
+    <!-- cameraActivity -->
+
+    <string name="title_activity_picture_modify">PictureModifyActivity</string>
+
+    <string name="toast_delete_picture">사진을 삭제하였습니다.</string>
+    <string name="title_activity_login">LoginActivity</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="title_activity_share">ShareActivity</string>
+
+    <string name="private_tab">개인</string>
+    <string name="group_tab">그룹</string>
+    <string name="channel_tab">채널</string>
+
+    <string name="recommend_tab">추천</string>
+    <string name="contact_tab">연락처</string>
+    <string name="sharecam_tab">쉐어캠</string>
+    <string name="title_activity_sign_up">SignUpActivity</string>
+
+</resources>

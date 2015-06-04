@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/cont_selected_text_color" android:state_pressed="true"/> <!-- selected -->
+    <item android:drawable="@color/cont_selected_text_color" android:state_selected="true"/> <!-- selected -->
+    <item android:drawable="@color/cont_default_text_color"/> <!-- default -->
+</selector>

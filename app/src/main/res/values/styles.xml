@@ -1,0 +1,31 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <!-- login layout -->
+    <style name="loginLayout">
+        <item name="android:paddingTop">@dimen/login_layout_padding_top</item>
+        <item name="android:paddingLeft">@dimen/login_layout_padding_side</item>
+        <item name="android:paddingRight">@dimen/login_layout_padding_side</item>
+    </style>
+
+    <!-- textView Btn -->
+    <style name="textViewBtn">
+        <item name="android:background">#000000</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:padding">@dimen/textview_btn_padding</item>
+        <item name="android:gravity">center_vertical|center_horizontal</item>
+
+    </style>
+
+    <!-- editText -->
+    <style name="editText">
+        <item name="android:background">@color/login_edittext_bg</item>
+        <item name="android:paddingLeft">@dimen/edittext_padding</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+</resources>

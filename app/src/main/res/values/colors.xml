@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cont_selected_text_color">#ffe74f57</color>
+    <color name="cont_default_text_color">#000000</color>
+
+
+    <!-- camera -->
+    <color name="camera_margin_normal">#000000</color>
+    <color name="camera_margin_transparent">#78000000</color>
+
+    <!--login -->
+    <color name="login_spinner_bg">#FFFFFF</color>
+    <color name="login_edittext_bg">#FFFFFF</color>
+</resources>
