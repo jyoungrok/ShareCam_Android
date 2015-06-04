@@ -4,7 +4,7 @@ ShareCam android application
 
 # Error
 
->dfg
+> dfg
 ```
 Process: com.claude.sharecam, PID: 17249
     java.lang.InterruptedException
@@ -16,3 +16,7 @@ Process: com.claude.sharecam, PID: 17249
             at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:588)
             at java.lang.Thread.run(Thread.java:820)
 ```
+
+
+
+fdg
