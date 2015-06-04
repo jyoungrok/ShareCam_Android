@@ -3,6 +3,8 @@
 ShareCam android application
 
 # Error
+
+>dfg
 ```
 Process: com.claude.sharecam, PID: 17249
     java.lang.InterruptedException
