@@ -16,8 +16,8 @@ ShareCam android application
 ## Develop Plan
 - contact
   - initialize contact    
-   - upload contact information to parse with deleting existing contact rows in parse server
-   - synchronize contact with sharecam friends ( it will be done in parse cloud code )
+    - upload contact information to parse with deleting existing contact rows in parse server
+    - synchronize contact with sharecam friends ( it will be done in parse cloud code )
     - this function will be called once user sign up and user want to synchronize
   - synchronize contact
     - synchronize contact with sharecam friends without upload local contacts to parse server 
