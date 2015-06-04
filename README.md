@@ -3,7 +3,7 @@
 ShareCam android application
 
 # Error
-
+```
 Process: com.claude.sharecam, PID: 17249
     java.lang.InterruptedException
             at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.reportInterruptAfterWait(AbstractQueuedSynchronizer.java:1991)
@@ -13,3 +13,4 @@ Process: com.claude.sharecam, PID: 17249
             at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1097)
             at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:588)
             at java.lang.Thread.run(Thread.java:820)
+```
