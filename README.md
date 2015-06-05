@@ -9,7 +9,7 @@ ShareCam android application
   - /signup/PhoeverifyFragment - verify phone number by sms or skip that
   - /signup/InputProfileFragment - update profile and user name and complete sigin up logic 
 - camera
-
+#### 15. 06. 05
 
 
 
@@ -17,9 +17,9 @@ ShareCam android application
 - contact
   - initialize contact    
     - upload contact information to parse with deleting existing contact rows in parse server
-      - The form of phone number,which issaved with country,should be like "821033575960", not "+82~~~" and  "010~~~"    
-      - +821033579560 -> 821033579560
-      - 01033579560 -> 821033579560
+      - The form of phone number,which is saved with country,should be like "+821033575960"
+      - 821033579560 -> +821033579560
+      - 01033579560 -> +821033579560
     - synchronize contact with sharecam friends ( it will be done in parse cloud code )
     - this function will be called once user sign up and user want to synchronize
   - synchronize contact
