@@ -9,6 +9,7 @@ ShareCam android application
   - /signup/PhoeverifyFragment - verify phone number by sms or skip that
   - /signup/InputProfileFragment - update profile and user name and complete sigin up logic 
 - camera
+
 #### 15. 06. 05
 
 
