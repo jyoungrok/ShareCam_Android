@@ -17,6 +17,11 @@ ShareCam android application
 ## Develop Plan
 - contact
 - share config
+- 
+
+## Launching
+
+- facebook release configuration
 
 
 
