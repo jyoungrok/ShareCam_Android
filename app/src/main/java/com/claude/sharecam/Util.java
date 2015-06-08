@@ -7,12 +7,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
@@ -24,11 +26,15 @@ import com.aviary.android.feather.sdk.IAviaryClientCredentials;
 import com.claude.sharecam.api.AWS;
 import com.claude.sharecam.api.ApiManager;
 import com.claude.sharecam.api.S3;
-import com.claude.sharecam.login.LoginActivity;
+//import com.claude.sharecam.login.LoginActivity;
 import com.claude.sharecam.parse.Contact;
 import com.claude.sharecam.response.Federation;
 import com.claude.sharecam.response.User;
+import com.claude.sharecam.share.ContactItem;
 import com.claude.sharecam.signup.SignUpActivity;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
@@ -44,6 +50,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -330,6 +337,58 @@ public class Util extends Application implements IAviaryClientCredentials {
         return byteBuffer.toByteArray();
     }
 
+    public static ArrayList<ContactItem> getContactList(Context context){
+
+
+        ArrayList<ContactItem> contactItems =new ArrayList<ContactItem>();
+        ArrayList numberList=new ArrayList();
+        // 로컬에서 연락처 데이터 불러옴
+        Cursor cursor = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Phone.NUMBER},
+                ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1", null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED  ASC");
+
+        while (cursor.moveToNext())
+        {
+
+            String name=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            if(!numberList.toString().contains(phoneNumber)) {
+                numberList.add(phoneNumber);
+                contactItems.add(new ContactItem(name, null, phoneNumber));
+            }
+        }
+
+        cursor.close();
+
+        return contactItems;
+    }
+
+    public static String convertToInternationalNumber(Context context,String phoneNumber)
+    {
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        try {
+            String locale=String.valueOf(context.getResources().getConfiguration().locale.getCountry());
+            Phonenumber.PhoneNumber swissNumberProto = phoneUtil.parse(phoneNumber,locale );
+            return phoneUtil.format(swissNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
+        } catch (NumberParseException e) {
+            Log.e("jyr","NumberParseException was thrown: " + e.toString());
+        }
+        return null;
+    }
+    public static String convertToNationalNumber(Context context,String phoneNumber)
+    {
+        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        try {
+            String locale=String.valueOf(context.getResources().getConfiguration().locale.getCountry());
+            Phonenumber.PhoneNumber swissNumberProto = phoneUtil.parse(phoneNumber,locale );
+            return phoneUtil.format(swissNumberProto, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+        } catch (NumberParseException e) {
+            Log.e("jyr","NumberParseException was thrown: " + e.toString());
+        }
+        return null;
+    }
 
 
 }

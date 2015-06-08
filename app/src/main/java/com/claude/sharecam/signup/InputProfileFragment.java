@@ -3,6 +3,8 @@ package com.claude.sharecam.signup;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -80,12 +82,12 @@ public class InputProfileFragment extends Fragment {
                 @Override
                 public void onSuccess() {
                     if( ((SignUpActivity)getActivity())!=null)
-                    ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                 }
                 @Override
                 public void onError() {
                     if( ((SignUpActivity)getActivity())!=null)
-                    ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
 
                 }
             });
@@ -174,39 +176,67 @@ public class InputProfileFragment extends Fragment {
                     return;
                 }
 
-//
-//                String profileName;
-//                String profileURL;
-//                if(newProfileURL.length()!=0)
-//                    profileURL=newProfileURL;
-//                else
-//                    profileURL=((Util)getActivity().getApplicationContext()).pref.getString(Constants.PREF_USER_PROFILE_URL,null);
-//
-//                profileName=inputProfileNameET.getText().toString();
-
                 ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
 
-                //complete the logic for singing up
-                ParseUser user = ParseUser.getCurrentUser();
-                user.put("username", inputProfileNameET.getText().toString());
-                user.put("completed",true);
-                user.saveInBackground(new SaveCallback() {
-                    @Override
-                    public void done(ParseException e) {
+                //initialze contact (upload contact to server)
+                //complete singing up logic
+                //기존 주소록 삭제하고 최신 주소록 업로드
+                ParseAPI.initContact(ParseUser.getCurrentUser(), getActivity(), new Handler() {
+                    public void handleMessage(Message msg) {
 
-                        if (e == null) {
-                            ParseAPI.initContact(getActivity());
-                            //카메라 실행
-                            Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
-                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(i);
-                        }
+                        //업로드된 주소록 기반 쉐어캠 친구 목록 동기화
+                        ParseAPI.syncFriendWithContact(getActivity(),new Handler(){
 
-                        else {
-                            Util.showToast(getActivity(), ErrorCode.getToastMessageId(e));
-                        }
+
+                            public void handleMessage(Message msg)
+                            {
+
+                                //회원 가입 완료
+                                ParseAPI.signUpCompleted(getActivity(),new Handler(){
+                                    @Override
+                                    public void handleMessage(Message msg) {
+                                        super.handleMessage(msg);
+                                        //카메라 실행
+                                        Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
+                                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivity(i);
+
+                                    }
+                                });
+                                /*
+
+                                //complete the logic for singing up
+                                ParseUser user = ParseUser.getCurrentUser();
+                                user.put("username", inputProfileNameET.getText().toString());
+                                user.put("completed",true);
+
+                                //save user name and completer = true
+                                user.saveInBackground(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        if (e == null) {
+                                            //카메라 실행
+                                            Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
+                                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            startActivity(i);
+                                        } else {
+                                            ParseAPI.erroHandling(getActivity(), e);
+                                        }
+                                    }
+                                });*/
+
+                            }
+                        });
+
                     }
                 });
+
+
+
+            }
+
+
+
 
 
 
@@ -233,7 +263,7 @@ public class InputProfileFragment extends Fragment {
                 });
                 */
 
-            }
+
         });
 
 

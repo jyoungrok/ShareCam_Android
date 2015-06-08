@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.claude.sharecam.R;
+import com.claude.sharecam.Util;
 
 import java.util.ArrayList;
 
@@ -53,32 +54,67 @@ public class ContactFragment extends Fragment {
 
     private void setAdapter(int mode) {
 
-        contactItems =new ArrayList<ContactItem>();
+//        contactItems =new ArrayList<ContactItem>();
 
         switch (mode) {
             case RECOMMEND:
 
                 break;
             case CONTACT:
-                // 로컬에서 연락처 데이터 불러옴
-                String[] projection = {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER,ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER};
+                contactItems=Util.getContactList(getActivity());
+
+//                ArrayList numberList=new ArrayList();
+//                // 로컬에서 연락처 데이터 불러옴
+//                Cursor cursor = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+//                        new String[]{ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+//                                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+//                                ContactsContract.CommonDataKinds.Phone.NUMBER},
+//                        ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1", null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED  ASC");
+//
+//                while (cursor.moveToNext())
+//                {
+//
+//                    String name=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+//                    String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+//                    if(!numberList.toString().contains(phoneNumber)) {
+//                        numberList.add(phoneNumber);
+//                        contactItems.add(new ContactItem(name, null, phoneNumber));
+//                    }
+//                }
+//
+//                cursor.close();
+
+
+               /*
                 //QUERY FOR THE PEOPLE IN YOUR ADDRESS BOOK
-                Cursor cursor = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+                Cursor cursor = getActivity().getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
                 if(cursor.moveToFirst()) {
                     do{
 
                         //휴대폰 번호가 있는 경우
-                        if(Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER)))>0) {
-                            String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                            String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                        if(Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)))>0) {
+                            String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                            String contact_id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID ));
 
-                            contactItems.add(new ContactItem(name,null,phone));
+                            // Query and loop for every phone number of the contact
+                            Cursor phoneCursor = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { contact_id }, null);
+
+                            if(phoneCursor.moveToFirst())
+                            {
+                                String phone = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                                contactItems.add(new ContactItem(name,null,phone));
+                            }
+
+                            phoneCursor.close();
+
 
                         }
 
                     }while(cursor.moveToNext());
-                }
+
+                    cursor.close();
+                }*/
 
 
                 break;

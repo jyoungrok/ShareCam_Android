@@ -105,6 +105,7 @@ public class PhoneVerifyFragment extends Fragment {
                 if(countries.get(position).mCountryIso.toLowerCase().equals( mTelephonyMgr.getNetworkCountryIso().toLowerCase())) {
                     Log.d("jyr","device line number="+mTelephonyMgr.getLine1Number());
                     phoneNumberTxt.setText(mTelephonyMgr.getLine1Number());
+
                     return;
                 }
                 Log.d("jyr","selected country code spinner");

@@ -35,7 +35,10 @@ import android.widget.Toast;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
+import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.share.ShareActivity;
+import com.parse.Parse;
+import com.parse.ParseUser;
 
 public class CameraActivity extends ActionBarActivity {
 
@@ -254,8 +257,19 @@ public class CameraActivity extends ActionBarActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ParseAPI.syncFriendWithContact(this, new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+            }
+        });
+//        ParseUser user=ParseUser.getCurrentUser();
+//        user.put("phone","dfgdfg");
+//        user.saveInBackground();
+
+
         getSupportActionBar().hide();
-      Util.checkLogin(this);
+         Util.checkLogin(this);
         context=this;
         activity=this;
         setContentView(R.layout.activity_camera);

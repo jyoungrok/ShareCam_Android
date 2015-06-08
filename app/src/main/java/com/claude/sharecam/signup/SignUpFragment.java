@@ -82,7 +82,7 @@ public class SignUpFragment extends Fragment {
                                         ParseFile file = new ParseFile(user.getObjectId()+".png", ImageManipulate.bitmapToByteArray(bitmap));
                                         user.put("profile", file);
                                         user.put("username", Profile.getCurrentProfile().getName());
-                                        user.put("name", "name");
+//                                        user.put("name", "name");
                                         user.saveInBackground();
 
                                         Util.startFragment(getActivity().getSupportFragmentManager(), R.id.signupContainer, new PhoneVerifyFragment(), false, null);
