@@ -22,6 +22,7 @@ ShareCam android application
 ## Launching
 
 - facebook release configuration
+- update check
 
 
 
