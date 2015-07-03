@@ -1,32 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-    <android.support.v7.widget.RecyclerView
-        android:visibility="gone"
-        android:orientation="horizontal"
-        android:id="@+id/apRecycleView"
-        android:layout_width="match_parent"
-        android:layout_height="64dp">
-
-    </android.support.v7.widget.RecyclerView>
-    <EditText
-        android:id="@+id/searchPersonET"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-    <!--<LinearLayout-->
-        <!--android:orientation="vertical"-->
-        <!--android:id="@+id/tabLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"></LinearLayout>-->
-    <ExpandableListView
-        android:id="@+id/individualListview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"></ExpandableListView>
-<!--
+    android:layout_height="match_parent">
     <android.support.v4.app.FragmentTabHost
-
 
         android:id="@android:id/tabhost"
         android:layout_width="match_parent"
@@ -51,5 +29,4 @@
         </LinearLayout>
 
     </android.support.v4.app.FragmentTabHost>
-    -->
 </LinearLayout>

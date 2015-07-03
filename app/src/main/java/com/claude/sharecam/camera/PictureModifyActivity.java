@@ -28,7 +28,10 @@ import com.aviary.android.feather.sdk.internal.headless.utils.MegaPixels;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
+import com.claude.sharecam.parse.ParseAPI;
+import com.claude.sharecam.parse.SharePerson;
 import com.claude.sharecam.view.ResizableImageView;
+import com.parse.ParseUser;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,12 +63,14 @@ public class PictureModifyActivity extends ActionBarActivity {
 
     Context context;
 
+    ArrayList<SharePerson> spItems;//공유 개인 목록
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picture_modify);
 
+        getSupportActionBar().hide();
 
         initialize();
 
@@ -74,6 +79,7 @@ public class PictureModifyActivity extends ActionBarActivity {
     private void initialize()
     {
 
+        spItems=Util.getSharePersonList(this);
         context=this;
 //        pictureImg=(ImageView)findViewById(R.id.pictureImg);
         pictureViewPager=(ViewPager)findViewById(R.id.pictureViewPager);
@@ -141,8 +147,7 @@ public class PictureModifyActivity extends ActionBarActivity {
         @Override
         public void onClick(View v) {
 
-            //갤러리에서 이미지 삭제
-//            ImageManipulate.galleryRemovePic(context,arItem.get(currentPosition));
+
             //이미지 삭제 후 toast 실행
             if(ImageManipulate.removeFile(arItem.get(currentPosition)))
                 Toast.makeText(context,context.getResources().getString(R.string.toast_delete_picture),Toast.LENGTH_SHORT).show();
@@ -210,11 +215,7 @@ public class PictureModifyActivity extends ActionBarActivity {
                 pictureViewPager.setAdapter(pagerAdapter);
                 pictureViewPager.setCurrentItem(currentPosition);
                 selectPage(currentPosition+1);
-//            pagerAdapter.notifyDataSetChanged();
-//                arItem.add(currentPosition,data.getData().getPath());
-//                pagerAdapter.notifyDataSetChanged();
-//                arItem.remove(currentPosition);
-//                pagerAdapter.notifyDataSetChanged();
+
 
                 Log.d("jyr","changed");
             }
@@ -236,6 +237,7 @@ public class PictureModifyActivity extends ActionBarActivity {
         }
     };
 
+    //카메라로 돌아 가기
     private View.OnClickListener cameraBtnListener= new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -243,11 +245,14 @@ public class PictureModifyActivity extends ActionBarActivity {
         }
     };
 
+    //찍은 사진들 공유하기
     private View.OnClickListener shareBtnListener=new View.OnClickListener() {
         @Override
         public void onClick(View v) {
 
 
+            ParseAPI.uploadPicture(context, spItems, arItem, ParseUser.getCurrentUser());
+            finish();
         }
     };
 

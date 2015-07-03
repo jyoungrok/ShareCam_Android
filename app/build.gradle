@@ -33,6 +33,7 @@ repositories { mavenCentral()
         url "${project.rootDir}/creativesdk-repo"
     }}
 dependencies {
+    
     compile 'com.parse.bolts:bolts-android:1.+'
     compile 'com.android.support:recyclerview-v7:22.1.1'
     compile 'com.squareup.okhttp:okhttp:2.0.0'

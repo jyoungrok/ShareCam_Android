@@ -36,6 +36,7 @@ import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.parse.ParseAPI;
+import com.claude.sharecam.parse.SharePerson;
 import com.claude.sharecam.share.ShareActivity;
 import com.parse.Parse;
 import com.parse.ParseUser;
@@ -76,6 +77,7 @@ public class CameraActivity extends ActionBarActivity {
     //사진 여러장 찍기 모드에서 저장한 이미지들의 경로
     private ArrayList<String> arItem;
     private ArrayList<byte[]> contItem;//연속 사진 촬영 시 촬영한 사진 임시 저장
+    private ArrayList<SharePerson> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
 
     Context context;
     Activity activity;
@@ -147,7 +149,7 @@ public class CameraActivity extends ActionBarActivity {
 
                 //
 
-                String savedUriStr=null;
+                String savedFilePath=null;
 
                 //연속 촬영 중일 경우 (default - > 연속 촬영 아닐 때)
                 switch(cameraSetting.cont)
@@ -155,7 +157,7 @@ public class CameraActivity extends ActionBarActivity {
                     case Constants.PREF_CONT_2_VERTICAL:
                         contItem.add(data);
                         if(contItem.size()==2) {
-                            savedUriStr=CameraFunction.saveContPictrue(activity,cameraSetting,contItem,orientationListener.getRememberedOrientation());
+                            savedFilePath=CameraFunction.saveContPictrue(activity,cameraSetting,contItem,orientationListener.getRememberedOrientation());
                             contItem.clear();
                         }
                         else{
@@ -165,7 +167,7 @@ public class CameraActivity extends ActionBarActivity {
                     case Constants.PREF_CONT_3_VERTICAL:
                         contItem.add(data);
                         if(contItem.size()==3) {
-                            savedUriStr=CameraFunction.saveContPictrue(activity,cameraSetting,contItem,orientationListener.getRememberedOrientation());
+                            savedFilePath=CameraFunction.saveContPictrue(activity,cameraSetting,contItem,orientationListener.getRememberedOrientation());
                             contItem.clear();
                         }
                         else{
@@ -175,7 +177,7 @@ public class CameraActivity extends ActionBarActivity {
                     case Constants.PREF_CONT_4:
                         contItem.add(data);
                         if(contItem.size()==4) {
-                            savedUriStr=CameraFunction.saveContPictrue(activity,cameraSetting,contItem,orientationListener.getRememberedOrientation());
+                            savedFilePath=CameraFunction.saveContPictrue(activity,cameraSetting,contItem,orientationListener.getRememberedOrientation());
                             contItem.clear();
                         }
                         else{
@@ -184,7 +186,7 @@ public class CameraActivity extends ActionBarActivity {
                         break;
                     case Constants.PREF_CONT_1:
                     default:
-                        savedUriStr= CameraFunction.savePicture(activity,cameraSetting,data,orientationListener.getRememberedOrientation());
+                        savedFilePath= CameraFunction.savePicture(activity,cameraSetting,data,orientationListener.getRememberedOrientation());
                         break;
                 }
 
@@ -193,18 +195,19 @@ public class CameraActivity extends ActionBarActivity {
 
                     case Constants.PREF_CAMERA_DIRECT_MODE:
 
+
+                        ParseAPI.uploadPicture(context,spItems,savedFilePath,ParseUser.getCurrentUser());
                         break;
 
                     case Constants.PREF_CAMERA_ONE_PICTURE_MODE:
                         Intent intent=new Intent(activity,PictureModifyActivity.class);
                         intent.putExtra(PictureModifyActivity.MODE,Constants.PREF_CAMERA_ONE_PICTURE_MODE);
-                        intent.putExtra(PictureModifyActivity.IMAGE_PATH,savedUriStr);
-//                        intent.putExtra(PictureModifyActivity.IMAGE_BYTE,ImageManipulate.getImage_byte(activity,cameraSetting.ratio,data,R.mipmap.logo, ImageManipulate.getRotate(orientationListener.getRememberedOrientation(),cameraSetting.cameraFront)));
+                        intent.putExtra(PictureModifyActivity.IMAGE_PATH,savedFilePath);
                         startActivity(intent);
                         break;
 
                     case Constants.PREF_CAMERA_MULTIPLE_PICTURE_MODE:
-                        arItem.add(savedUriStr);
+                        arItem.add(savedFilePath);
                         multPictureAcceptBtn.setVisibility(View.VISIBLE);
                         multPictureText.setText(String.valueOf(arItem.size()));
                         setLayout(MULT_PICUTRE_TEXT_LAYOUT);
@@ -212,30 +215,13 @@ public class CameraActivity extends ActionBarActivity {
 
                 }
 
-//                try {
-//                    //write the file
-//                    FileOutputStream fos = new FileOutputStream(pictureFile);
-//                    //이미지에 로고 추가한 후 저장
-//                    fos.write(ImageManipulate.getImage_byte(activity, cameraSetting.ratio,data, R.mipmap.logo,ImageManipulate.getRotate(orientationListener.getRememberedOrientation(), cameraSetting.cameraFront)));
-//                    fos.close();
-////                    Toast toast = Toast.makeText(myContext, "Picture saved: " + pictureFile.getName(), Toast.LENGTH_LONG);
-////                    toast.show();
-//
-//                    //add image to gallery
-//                    ImageManipulate.galleryAddPic(context, pictureFile.getAbsolutePath());
-//
-//
-//
-//                } catch (FileNotFoundException e) {
-//                } catch (IOException e) {
-//                }
-
                 //refresh camera to continue preview
                 mPreview.refreshCamera(mCamera);
             }
         };
         return picture;
     }
+
 
 
 
@@ -257,20 +243,20 @@ public class CameraActivity extends ActionBarActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ParseAPI.syncFriendWithContact(this, new Handler(){
+//        Log.d("jyr","onCreate CameraActivity");
+        context=this;
+        //친구 목록 불러오기
+        ParseAPI.getExistingFriends(context,new Handler(){
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
             }
         });
-//        ParseUser user=ParseUser.getCurrentUser();
-//        user.put("phone","dfgdfg");
-//        user.saveInBackground();
 
 
         getSupportActionBar().hide();
          Util.checkLogin(this);
-        context=this;
+
         activity=this;
         setContentView(R.layout.activity_camera);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -281,6 +267,8 @@ public class CameraActivity extends ActionBarActivity {
     public void onResume() {
         super.onResume();
 
+        //쉐어캠 공유 목록 불러옴
+        spItems=Util.getSharePersonList(this);
         orientationListener.enable();
 
         if (!CameraFunction.hasCamera(myContext)) {
@@ -316,6 +304,13 @@ public class CameraActivity extends ActionBarActivity {
     }
 
     private void initialize() {
+
+//        spItems=Util.getSharePersonList(this);
+
+
+//        Log.d("jyr","SharePerson item size="+spItems.size());
+
+
         arItem=new ArrayList<String >();
         contItem=new ArrayList<byte[]>();
 

@@ -2,6 +2,7 @@ package com.claude.sharecam.parse;
 
 import com.parse.ParseACL;
 import com.parse.ParseClassName;
+import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
@@ -11,20 +12,29 @@ import com.parse.ParseUser;
 @ParseClassName("Friend")
 public class Friend extends ParseObject{
 
-    public ParseUser getCreatedBy()
-    {
-        return getParseUser("createdBy");
-    }
+//    public ParseUser getCreatedBy()
+//    {
+//        return getParseUser("createdBy");
+//    }
 
     public ParseUser getFriendUser()
     {
         return getParseUser("friendUser");
     }
 
-    public void setCreatedBy(ParseUser user)
+    public byte[] getProfile()
     {
-        put("createdBy",user);
+        try {
+            return getParseUser("friendUser").getParseFile("profile").getData();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
+//    public void setCreatedBy(ParseUser user)
+//    {
+//        put("createdBy",user);
+//    }
 
     public void setFriendUser(String phone)
     {

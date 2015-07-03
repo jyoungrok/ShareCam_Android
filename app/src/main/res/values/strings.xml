@@ -51,4 +51,8 @@
     <string name="sharecam_tab">쉐어캠</string>
     <string name="title_activity_sign_up">SignUpActivity</string>
 
+    <!-- IndividualFragment -->
+    <string name="existing_sharecam_friend">쉐어캠에 있어요</string>
+    <string name="not_exisiting_sharecam_friend">쉐어캠에 아직 없어요</string>
+
 </resources>

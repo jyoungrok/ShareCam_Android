@@ -178,21 +178,40 @@ public class InputProfileFragment extends Fragment {
 
                 ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
 
+                ParseAPI.initialize(ParseUser.getCurrentUser(), getActivity(), new Handler(){
+                    @Override
+                    public void handleMessage(Message msg) {
+                        super.handleMessage(msg);
+
+                        //회원 가입 완료
+                        ParseAPI.signUpCompleted(getActivity(), new Handler() {
+                            @Override
+                            public void handleMessage(Message msg) {
+                                super.handleMessage(msg);
+                                //카메라 실행
+                                Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
+                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(i);
+
+                            }
+                        });
+                    }
+                });
+                /*
                 //initialze contact (upload contact to server)
                 //complete singing up logic
-                //기존 주소록 삭제하고 최신 주소록 업로드
+                //기존 주소록 삭제하고 최신 주소록 서버에 업로드
                 ParseAPI.initContact(ParseUser.getCurrentUser(), getActivity(), new Handler() {
                     public void handleMessage(Message msg) {
 
                         //업로드된 주소록 기반 쉐어캠 친구 목록 동기화
-                        ParseAPI.syncFriendWithContact(getActivity(),new Handler(){
+                        ParseAPI.syncFriendWithContact(getActivity(), new Handler() {
 
 
-                            public void handleMessage(Message msg)
-                            {
+                            public void handleMessage(Message msg) {
 
                                 //회원 가입 완료
-                                ParseAPI.signUpCompleted(getActivity(),new Handler(){
+                                ParseAPI.signUpCompleted(getActivity(), new Handler() {
                                     @Override
                                     public void handleMessage(Message msg) {
                                         super.handleMessage(msg);
@@ -203,33 +222,13 @@ public class InputProfileFragment extends Fragment {
 
                                     }
                                 });
-                                /*
 
-                                //complete the logic for singing up
-                                ParseUser user = ParseUser.getCurrentUser();
-                                user.put("username", inputProfileNameET.getText().toString());
-                                user.put("completed",true);
-
-                                //save user name and completer = true
-                                user.saveInBackground(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e == null) {
-                                            //카메라 실행
-                                            Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
-                                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                            startActivity(i);
-                                        } else {
-                                            ParseAPI.erroHandling(getActivity(), e);
-                                        }
-                                    }
-                                });*/
 
                             }
                         });
 
                     }
-                });
+                });*/
 
 
 

@@ -8,12 +8,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -21,38 +18,38 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.aviary.android.feather.sdk.IAviaryClientCredentials;
 import com.claude.sharecam.api.AWS;
 import com.claude.sharecam.api.ApiManager;
-import com.claude.sharecam.api.S3;
 //import com.claude.sharecam.login.LoginActivity;
 import com.claude.sharecam.parse.Contact;
+import com.claude.sharecam.parse.Friend;
+import com.claude.sharecam.parse.Picture;
+import com.claude.sharecam.parse.SharePerson;
+import com.claude.sharecam.parse.ShareFriend;
+import com.claude.sharecam.parse.User;
 import com.claude.sharecam.response.Federation;
-import com.claude.sharecam.response.User;
-import com.claude.sharecam.share.ContactItem;
+import com.claude.sharecam.share.IndividualItem;
 import com.claude.sharecam.signup.SignUpActivity;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
-import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 /**
  * Created by Claude on 15. 4. 9..
@@ -94,19 +91,14 @@ public class Util extends Application implements IAviaryClientCredentials {
         // Enable Local Datastore.
         Parse.enableLocalDatastore(this);
         ParseObject.registerSubclass(Contact.class);
+        ParseObject.registerSubclass(Friend.class);
+        ParseObject.registerSubclass(User.class);
+        ParseObject.registerSubclass(SharePerson.class);
+        ParseObject.registerSubclass(ShareFriend.class);
+        ParseObject.registerSubclass(Picture.class);
         Parse.initialize(this, Constants.PARSE_APPLICATION_ID, Constants.PARSE_CLIENT_KEY);
         ParseFacebookUtils.initialize(this, Constants.REQUEST_FACEBOOK_LOGIN);
 
-//        ParseQuery<ParseObject> query = ParseQuery.getQuery("Verify_UserPhone");
-//        query.findInBackground(new FindCallback<ParseObject>() {
-//            @Override
-//            public void done(List<ParseObject> list, com.parse.ParseException e) {
-//
-//                Log.d("jyr","dfg");
-//            }
-//
-//
-//        });
 
 
     }
@@ -164,8 +156,10 @@ public class Util extends Application implements IAviaryClientCredentials {
                 .putString(Constants.PREF_USER_NAME, user.getString("username"))
                 .putString(Constants.PREF_USER_PROFILE_URL, user.getString("profile"))
                 .commit();
-    }
 
+
+    }
+/*
     public static void setUserPref(Context context,User user)
     {
         SharedPreferences.Editor editor=((Util) context.getApplicationContext()).editor;
@@ -194,7 +188,7 @@ public class Util extends Application implements IAviaryClientCredentials {
 
                 .commit();
     }
-
+*/
 
     public static void setFederationPref(Context context,Federation federation)
     {
@@ -337,16 +331,18 @@ public class Util extends Application implements IAviaryClientCredentials {
         return byteBuffer.toByteArray();
     }
 
-    public static ArrayList<ContactItem> getContactList(Context context){
+    //로컬 content provider를 통해 연락처 데이터 불러옴
+    public static ArrayList<IndividualItem> getContactList(Context context){
 
 
-        ArrayList<ContactItem> contactItems =new ArrayList<ContactItem>();
+        ArrayList<IndividualItem> contactItems =new ArrayList<IndividualItem>();
         ArrayList numberList=new ArrayList();
         // 로컬에서 연락처 데이터 불러옴
         Cursor cursor = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 new String[]{ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
                         ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                        ContactsContract.CommonDataKinds.Phone.NUMBER},
+                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.PHOTO_URI},
                 ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1", null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED  ASC");
 
         while (cursor.moveToNext())
@@ -354,9 +350,11 @@ public class Util extends Application implements IAviaryClientCredentials {
 
             String name=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
             String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            String imageUri=cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI));
             if(!numberList.toString().contains(phoneNumber)) {
                 numberList.add(phoneNumber);
-                contactItems.add(new ContactItem(name, null, phoneNumber));
+                contactItems.add(new IndividualItem(name, imageUri, Util.convertToNationalNumber(context,phoneNumber)));
+//                Log.d("jyr",Util.convertToNationalNumber(context,phoneNumber));
             }
         }
 
@@ -388,6 +386,23 @@ public class Util extends Application implements IAviaryClientCredentials {
             Log.e("jyr","NumberParseException was thrown: " + e.toString());
         }
         return null;
+    }
+
+    //preference에 공유 하고자 하는 개인(연락처 + 쉐어캠 친구) 추가
+    public static void setSharePersonList(Context context, ArrayList<SharePerson> personItems)
+    {
+        Gson gson = new Gson();
+        SharedPreferences.Editor editor=((Util) context.getApplicationContext()).editor;
+        editor.putString(Constants.PREF_SHARE_PERSON,gson.toJson(personItems));
+        editor.commit();
+    }
+
+    //preference에서 공유 개인(연락처 + 쉐어캠 친구) 불러옴
+    public static ArrayList<SharePerson> getSharePersonList(Context context)
+    {
+        Type resultType = new TypeToken<ArrayList<SharePerson>>() {}.getType();
+        Gson gson=new Gson();
+        return gson.fromJson(((Util) context.getApplicationContext()).pref.getString(Constants.PREF_SHARE_PERSON, Constants.PREF_SHARE_PERSON_DEFAULT),resultType);
     }
 
 

@@ -103,8 +103,10 @@ public class CameraFunction {
         try {
             //write the file
             FileOutputStream fos = new FileOutputStream(pictureFile);
+
+            byte[] file =ImageManipulate.getImage_byte(activity, cameraSetting.ratio, data, R.mipmap.logo, ImageManipulate.getRotate(orientation, cameraSetting.cameraFront));
             //이미지에 로고 추가한 후 저장
-            fos.write(ImageManipulate.getImage_byte(activity, cameraSetting.ratio, data, R.mipmap.logo, ImageManipulate.getRotate(orientation, cameraSetting.cameraFront)));
+            fos.write(file);
             fos.close();
 //                    Toast toast = Toast.makeText(activity, "Picture saved: " + pictureFile.getAbsolutePath(), Toast.LENGTH_LONG);
 //                    toast.show();

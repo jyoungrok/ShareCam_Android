@@ -66,6 +66,11 @@ public class Constants {
     public static final String PREF_CAMERA_CONT="pref_cameraCont";
     public static final String PREF_CAMERA_MODE="pref_cameraMode";
 
+    //share pref
+    public static final String PREF_SHARE_PERSON="pref_sharePerson";
+//    public static final String PREF_SHARE_CONTACT="pref_shareContact";
+//    public static final String PREF_SHARE_FRIEND="pref_shareFriend";
+
 
 
     //preferance value
@@ -93,6 +98,7 @@ public class Constants {
 //    public static final int PREF_CONT_11_4=8;//1:1비율 한번 촬영
 
     //preferance default value
+    public static final String PREF_SHARE_PERSON_DEFAULT="[]";
     public static final boolean PREF_LOGIN_DEFAULT=false;
     public static final int PREF_RATIO_DEFAULT=PREF_RATIO_11;
     public static final int PREF_CONT_DEFAULT= PREF_CONT_1;
@@ -131,6 +137,8 @@ public class Constants {
 
 
 
+    //Loader
+    public static final int PERSON_LOADER=1;
 
 
 

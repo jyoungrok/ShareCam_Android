@@ -1,6 +1,7 @@
 package com.claude.sharecam.camera;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -18,11 +19,14 @@ import android.view.WindowManager;
 
 import com.claude.sharecam.Constants;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
@@ -105,7 +109,7 @@ public class ImageManipulate {
         if(isVerticalMode)
             bitmap = Bitmap.createScaledBitmap(first, first.getWidth(), first.getHeight()+second.getHeight(), true);
         else
-        bitmap = Bitmap.createScaledBitmap(first, first.getWidth()+second.getWidth(), first.getHeight(), true);
+            bitmap = Bitmap.createScaledBitmap(first, first.getWidth()+second.getWidth(), first.getHeight(), true);
 
         Paint p = new Paint();
         p.setDither(true);
@@ -375,6 +379,26 @@ public class ImageManipulate {
 
         return fileCacheItem;
     }
+
+    public static byte[] convertImageToByte(Context context,String filePath){
+        byte[] data = null;
+
+        File file=new File(filePath);
+        try {
+            ContentResolver cr = context.getContentResolver();
+            InputStream inputStream =new BufferedInputStream(new FileInputStream(file));
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            data = baos.toByteArray();
+            bitmap.recycle();
+        } catch (FileNotFoundException e) {
+            Log.e("jyr","error convert image to byte");
+            e.printStackTrace();
+        }
+        return data;
+    }
+
 
 //    public  void cropImage(Uri contentUri,Activity activity,int requestCode) {
 //        Intent cropIntent = new Intent("com.android.camera.action.CROP");
