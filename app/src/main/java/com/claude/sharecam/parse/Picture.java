@@ -30,7 +30,7 @@ public class Picture extends ParseObject{
 
     public void setFriendId(String objectId)
     {
-        put("friendList",objectId);
+        addUnique("friendList",objectId);
     }
     public void setFriend(Friend friend)
     {

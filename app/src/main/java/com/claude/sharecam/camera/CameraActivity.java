@@ -194,8 +194,6 @@ public class CameraActivity extends ActionBarActivity {
                 {
 
                     case Constants.PREF_CAMERA_DIRECT_MODE:
-
-
                         ParseAPI.uploadPicture(context,spItems,savedFilePath,ParseUser.getCurrentUser());
                         break;
 
