@@ -1,7 +1,9 @@
 package com.claude.sharecam.camera;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,11 +36,12 @@ import android.widget.Toast;
 
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
+//import com.claude.sharecam.TestActivity;
 import com.claude.sharecam.Util;
+import com.claude.sharecam.main.MainActivity;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.SharePerson;
+import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.share.ShareActivity;
-import com.parse.Parse;
 import com.parse.ParseUser;
 
 public class CameraActivity extends ActionBarActivity {
@@ -58,7 +61,7 @@ public class CameraActivity extends ActionBarActivity {
     private Camera mCamera;
     private CameraPreview mPreview;
     private PictureCallback mPicture;
-    private ImageView capture, switchBtn, flashBtn,extraFeatureBtn, contShootBtn,cont1Btn, cont2VerticalBtn, cont3VerticalBtn,cont4Btn, directModeBtn,onePictureModeBtn,multPictureModeBtn, multPictureAcceptBtn, shareConfigBtn;
+    private ImageView albumBtn, capture, switchBtn, flashBtn,extraFeatureBtn, contShootBtn,cont1Btn, cont2VerticalBtn, cont3VerticalBtn,cont4Btn, directModeBtn,onePictureModeBtn,multPictureModeBtn, multPictureAcceptBtn, shareConfigBtn;
     private Context myContext;
     private FrameLayout gridLayout;
     private CameraFrameLayout cameraPreview;
@@ -77,7 +80,7 @@ public class CameraActivity extends ActionBarActivity {
     //사진 여러장 찍기 모드에서 저장한 이미지들의 경로
     private ArrayList<String> arItem;
     private ArrayList<byte[]> contItem;//연속 사진 촬영 시 촬영한 사진 임시 저장
-    private ArrayList<SharePerson> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
+    private List<Individual> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
 
     Context context;
     Activity activity;
@@ -194,7 +197,11 @@ public class CameraActivity extends ActionBarActivity {
                 {
 
                     case Constants.PREF_CAMERA_DIRECT_MODE:
-                        ParseAPI.uploadPicture(context,spItems,savedFilePath,ParseUser.getCurrentUser());
+                        try {
+                            ParseAPI.uploadPicture(context,spItems,savedFilePath);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
                         break;
 
                     case Constants.PREF_CAMERA_ONE_PICTURE_MODE:
@@ -243,17 +250,28 @@ public class CameraActivity extends ActionBarActivity {
 
 //        Log.d("jyr","onCreate CameraActivity");
         context=this;
-        //친구 목록 불러오기
-        ParseAPI.getExistingFriends(context,new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-            }
-        });
-
 
         getSupportActionBar().hide();
-         Util.checkLogin(this);
+        //로그인 확인 해보기
+        Util.checkLogin(this);
+
+
+//        startActivity(new Intent(this, TestActivity.class));
+
+
+        //친구 목록 불러오기
+//        ParseAPI.initFriends(context, new Handler() {
+//            @Override
+//            public void handleMessage(Message msg) {
+//                super.handleMessage(msg);
+//            }
+//        });
+
+
+
+//        Util.syncData(context);
+
+
 
         activity=this;
         setContentView(R.layout.activity_camera);
@@ -266,7 +284,8 @@ public class CameraActivity extends ActionBarActivity {
         super.onResume();
 
         //쉐어캠 공유 목록 불러옴
-        spItems=Util.getSharePersonList(this);
+//        spItems=Util.getSharePersonList(this);
+        spItems=ParseAPI.getSharePerson_Local(this);
         orientationListener.enable();
 
         if (!CameraFunction.hasCamera(myContext)) {
@@ -358,6 +377,7 @@ public class CameraActivity extends ActionBarActivity {
         verticalLeftLayout =(LinearLayout)findViewById(R.id.verticalLeftLayout);
         verticalRightLayout =(LinearLayout)findViewById(R.id.verticalRightLayout);
         shareConfigBtn=(ImageView) findViewById(R.id.shareConfigBtn);
+        albumBtn=(ImageView )findViewById(R.id.albumBtn);
 
 //        verticalLayout=(RatioLayout)findViewById(R.id.verticalLayout);
 
@@ -425,6 +445,7 @@ public class CameraActivity extends ActionBarActivity {
 */
 
 
+        albumBtn.setOnClickListener(albumBtnListener);
         capture.setOnClickListener(captrureListener);
         switchBtn.setOnClickListener(switchCameraListener);
         flashBtn.setOnClickListener(flashBtnListener);
@@ -480,6 +501,16 @@ public class CameraActivity extends ActionBarActivity {
         setCont(cameraSetting.cont);
     }
 
+
+    //앨범 버튼 클릭시
+    OnClickListener albumBtnListener=new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent=new Intent(CameraActivity.this,MainActivity.class);
+            startActivity(intent);
+
+        }
+    };
 
     //사진 촬영 버튼 글릭 시
     OnClickListener captrureListener = new OnClickListener() {

@@ -37,7 +37,38 @@ import java.util.ArrayList;
  * Created by Claude on 15. 4. 29..
  */
 public class ImageManipulate {
+//
+//    public static Bitmap byteToBitmap(byte[] bytes)
+//    {
+//        return  BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+//
+//    }
+    public static Bitmap getThumbnailFromPath(String path, int size)
+    {
+        Bitmap imgthumBitmap=null;
+        try
+        {
 
+
+
+            FileInputStream fis = new FileInputStream(path);
+            imgthumBitmap = BitmapFactory.decodeStream(fis);
+
+            imgthumBitmap = Bitmap.createScaledBitmap(imgthumBitmap,
+                    size, size, false);
+
+            ByteArrayOutputStream bytearroutstream = new ByteArrayOutputStream();
+            imgthumBitmap.compress(Bitmap.CompressFormat.JPEG, 100,bytearroutstream);
+
+
+        }
+        catch(Exception ex) {
+            Log.e("jyr","exception getThumbnailFromPath ");
+
+
+        }
+        return imgthumBitmap;
+    }
     //사진 회전 각도 구함
     //@param rotate - 사진 찍을 다시 화면 각도
     public static int getRotate(int rotate, boolean cameraFront)

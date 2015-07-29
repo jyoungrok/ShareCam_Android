@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.claude.sharecam.main.MainActivity">
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        layout="@layout/actionbar_layout"
+        />
+
+    <FrameLayout
+        android:id="@+id/mainContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <!--<com.claude.sharecam.view.SlidingTabLayout-->
+            <!--android:id="@+id/mainSlidingTabs"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content" />-->
+        <!--<android.support.v4.view.ViewPager  android:id="@+id/mainPager"-->
+            <!--android:layout_width="match_parent" android:layout_height="match_parent"-->
+            <!--tools:context="com.claude.sharecam.share.ShareActivity" >-->
+        <!--</android.support.v4.view.ViewPager>-->
+    </FrameLayout>
+
+</LinearLayout>

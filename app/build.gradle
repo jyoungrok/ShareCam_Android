@@ -28,21 +28,27 @@ android {
         exclude 'META-INF/NOTICE.txt'
     }
 }
-repositories { mavenCentral()
+repositories {
+    maven {
+        url "https://jitpack.io"
+    }
+    mavenCentral()
     maven {
         url "${project.rootDir}/creativesdk-repo"
-    }}
+
+    }
+}
 dependencies {
-    
+//    compile 'com.github.CodeFalling:RecyclerViewSwipeDismiss:v1.1.1'
     compile 'com.parse.bolts:bolts-android:1.+'
-    compile 'com.android.support:recyclerview-v7:22.1.1'
+    compile 'com.android.support:recyclerview-v7:22.2.+'
     compile 'com.squareup.okhttp:okhttp:2.0.0'
-//    compile 'org.parceler:parceler:0.2.13'
+    //    compile 'org.parceler:parceler:0.2.13'
     compile 'com.facebook.android:facebook-android-sdk:4.0.0'
     compile 'com.adobe.creativesdk:image:4.0.0'
     compile 'com.adobe.creativesdk.foundation:auth:0.3.94'
     compile 'com.android.support:appcompat-v7:21.0.3'
-//    compile 'com.google.android.gms:play-services:7.3.0'
+    //    compile 'com.google.android.gms:play-services:7.3.0'
     //    compile files('libs/ParseFacebookUtilsV3-1.9.2.jar')
     //    compile files('libs/ParseFacebookUtilsV4-1.9.2.jar')
     compile files('libs/aws-android-sdk-core-2.1.10.jar')
@@ -51,8 +57,11 @@ dependencies {
     compile files('libs/gson-2.2.4.jar')
     compile files('libs/aws-android-sdk-mobilenalytics-2.1.10.jar')
     compile files('libs/libphonenumber-7.0.5.jar')
-    compile files('libs/Parse-1.9.2.jar')
     compile files('libs/ParseFacebookUtilsV4-1.9.2.jar')
     compile files('libs/picasso-2.5.2.jar')
     compile files('libs/retrofit-1.9.0.jar')
+    compile files('libs/Parse-1.9.2.jar')
+    compile files('libs/ormlite-android-4.48.jar')
+    compile files('libs/ormlite-core-4.48.jar')
+
 }

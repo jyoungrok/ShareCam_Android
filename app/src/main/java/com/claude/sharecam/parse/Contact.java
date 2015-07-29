@@ -1,5 +1,8 @@
 package com.claude.sharecam.parse;
 
+import android.content.Context;
+
+import com.claude.sharecam.Util;
 import com.parse.ParseACL;
 import com.parse.ParseClassName;
 import com.parse.ParseObject;
@@ -29,6 +32,9 @@ public class Contact extends ParseObject{
     public void setPhone(String phone)
     {
         put("phone",phone);
+    }
+    public void setPhoneNumber(Context context,String phone) {
+        put("phone", Util.convertToInternationalNumber(context,phone));
     }
 
     //an object may only be read or written by a single user

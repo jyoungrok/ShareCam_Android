@@ -3,6 +3,7 @@ package com.claude.sharecam.signup;
 import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +25,9 @@ import com.claude.sharecam.dialog.MyDialogBuilder;
 import com.claude.sharecam.dialog.SimpleDialog;
 import com.claude.sharecam.util.Country;
 import com.claude.sharecam.util.CountryMaster;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
@@ -102,9 +106,10 @@ public class PhoneVerifyFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
+                //디바이스에 등록된 자신의 전화번호 표시
                 if(countries.get(position).mCountryIso.toLowerCase().equals( mTelephonyMgr.getNetworkCountryIso().toLowerCase())) {
-                    Log.d("jyr","device line number="+mTelephonyMgr.getLine1Number());
-                    phoneNumberTxt.setText(mTelephonyMgr.getLine1Number());
+
+                    phoneNumberTxt.setText(Util.getE164PhoneNumber(getActivity(),mTelephonyMgr.getLine1Number()));
 
                     return;
                 }
@@ -121,6 +126,7 @@ public class PhoneVerifyFragment extends Fragment {
         });
 
         //인증번호 받기 버튼
+        //전화번호를 +국제번호 형식으로 변환하여 전송
         phoneVerifyNumBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -130,10 +136,19 @@ public class PhoneVerifyFragment extends Fragment {
                     return;
                 }
 
+                else if(Util.getE164PhoneNumber(getActivity(),phoneNumberTxt.getText().toString())==null)
+                {
+                    Util.showToast(getActivity(), R.string.phone_format_invalid);
+                    return;
+                }
+
+
+
                 MyDialogBuilder.showSimpleDialog(getActivity(), getActivity().getSupportFragmentManager(), R.string.phone_verify_message_sent);
 
                 HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("phone", phoneNumberTxt.getText().toString());
+                params.put("phone", Util.getE164PhoneNumber(getActivity(),phoneNumberTxt.getText().toString()));
+
 
                 ParseCloud.callFunctionInBackground(ParseAPI.SM_PHONE_VERIFY, params, new FunctionCallback<JSONObject>() {
                     public void done(JSONObject result, ParseException e) {
@@ -160,6 +175,7 @@ public class PhoneVerifyFragment extends Fragment {
                     Util.showToast(getActivity(),R.string.you_should_fill_out);
                     return;
                 }
+
 
                 setLayout(Constants.DOING_REQUEST);
 

@@ -2,6 +2,7 @@ package com.claude.sharecam.parse;
 
 import com.parse.ParseClassName;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseUser;
 
 /**
@@ -9,13 +10,10 @@ import com.parse.ParseUser;
  */
 @ParseClassName("_User")
 public class User extends ParseUser {
-    public byte[] getProfileFile() {
-        try {
-            return getParseFile("profile").getData();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public ParseFile getProfileFile() {
+
+            return getParseFile("profile");
+
     }
     public String getProfileURL()
     {

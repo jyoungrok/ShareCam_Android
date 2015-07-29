@@ -19,14 +19,13 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.claude.sharecam.R;
-import com.claude.sharecam.Util;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.SharePerson;
+import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.view.SlidingTabLayout;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 
-public class ShareActivity extends ActionBarActivity  {
+public class ShareActivity extends ActionBarActivity implements IndividualFragment.AddedItems {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -75,23 +74,23 @@ public class ShareActivity extends ActionBarActivity  {
 
                 if(addedItems!=null)
                 {
-                    ArrayList<SharePerson> scItems=new ArrayList<SharePerson>();
+                    ArrayList<Individual> scItems=new ArrayList<Individual>();
                     for(int i=0; i<addedItems.size(); i++)
                     {
 
                         //연락처 공유 설정 추가
-                        if(addedItems.get(i).MODE== IndividualItem.CONTACT && !addedItems.get(i).isFriend)
+                        if(addedItems.get(i).MODE== IndividualItem.CONTACT)
                         {
                             IndividualItem tempItem=addedItems.get(i);
-                            SharePerson sharePerson =new SharePerson(tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,false);
-                            scItems.add(sharePerson);
+                            Individual individual =new Individual(tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,false);
+                            scItems.add(individual);
                         }
                         //쉐어캠 친구 추가
                         else if(addedItems.get(i).MODE== IndividualItem.FRIEND)
                         {
                             IndividualItem tempItem=addedItems.get(i);
-                            SharePerson sharePerson =new SharePerson(tempItem.objectId,tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,true);
-                            scItems.add(sharePerson);
+                            Individual individual =new Individual(tempItem.objectId,tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,true);
+                            scItems.add(individual);
                         }
                     }
 
@@ -103,7 +102,7 @@ public class ShareActivity extends ActionBarActivity  {
                         e.printStackTrace();
                     }
 
-                    Util.setSharePersonList(context, scItems);
+//                    Util.setSharePersonList(context, scItems);
 //                    Util.setSharePersonList(context, scItems.size(), 0);
                     Log.d("jyr","contactShare num="+scItems.size());
 
@@ -141,6 +140,21 @@ public class ShareActivity extends ActionBarActivity  {
             this.addedItems.add(addedItems.get(i));
         }
 
+    }
+
+    @Override
+    public ArrayList<IndividualItem> getAddedItems() {
+        return addedItems;
+    }
+
+    @Override
+    public void addItem(IndividualItem individualItem) {
+        addedItems.add(individualItem);
+    }
+
+    @Override
+    public void removeItem(IndividualItem individualItem) {
+        addedItems.remove(individualItem);
     }
 /*
     //각 adapter에 필요한 데이터 불러옴
@@ -222,18 +236,19 @@ public class ShareActivity extends ActionBarActivity  {
 
         @Override
         public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
+            // getItem is called to instantiate the fragment for the given nextPage.
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch (position)
             {
                 default:
                 case 0:
-                    return new IndividualFragment();
+                    IndividualFragment individualFragment=new IndividualFragment();
+                    Bundle args=new Bundle();
+                    args.putInt(IndividualFragment.MODE,IndividualFragment.ADD_SHARE_USER_MODE);
+                    individualFragment.setArguments(args);
+                    return individualFragment;
                 case 1 :
                     return new GroupFragment();
-//                case 2:
-//
-//                    return new GroupFragment();
             }
 
         }

@@ -1,40 +1,33 @@
 package com.claude.sharecam.camera;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.net.Uri;
-import android.provider.SyncStateContract;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aviary.android.feather.sdk.AviaryIntent;
-import com.aviary.android.feather.sdk.internal.headless.utils.MegaPixels;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.SharePerson;
+import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.view.ResizableImageView;
 import com.parse.ParseUser;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PictureModifyActivity extends ActionBarActivity {
 
@@ -63,7 +56,7 @@ public class PictureModifyActivity extends ActionBarActivity {
 
     Context context;
 
-    ArrayList<SharePerson> spItems;//공유 개인 목록
+    List<Individual> spItems;//공유 개인 목록
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +72,8 @@ public class PictureModifyActivity extends ActionBarActivity {
     private void initialize()
     {
 
-        spItems=Util.getSharePersonList(this);
+        spItems=ParseAPI.getSharePerson_Local(this);
+//        spItems=Util.getSharePersonList(this);
         context=this;
 //        pictureImg=(ImageView)findViewById(R.id.pictureImg);
         pictureViewPager=(ViewPager)findViewById(R.id.pictureViewPager);

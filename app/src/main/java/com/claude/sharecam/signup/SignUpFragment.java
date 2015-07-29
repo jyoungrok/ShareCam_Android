@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +19,7 @@ import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.camera.CameraActivity;
 import com.claude.sharecam.camera.ImageManipulate;
+import com.claude.sharecam.parse.ParseAPI;
 import com.facebook.Profile;
 import com.kbeanie.imagechooser.api.ChooserType;
 import com.parse.LogInCallback;
@@ -44,9 +47,12 @@ public class SignUpFragment extends Fragment {
                              Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_sign_up, container, false);
 
+        Log.d("jyr","signUpFragment onCreateView");
         //로그인 되어 있다면 로그아웃
-        if(ParseUser.getCurrentUser()!=null)
+        if(ParseUser.getCurrentUser()!=null) {
+            Log.d("jyr","try sign out");
             ParseUser.getCurrentUser().logOut();
+        }
 
 
 
@@ -62,17 +68,14 @@ public class SignUpFragment extends Fragment {
                     @Override
                     public void done(ParseUser user, ParseException err) {
                         if (user == null) {
-                            Log.d("MyApp", "Error: " + err);
-                            Log.d("MyApp", "Uh oh. The user cancelled the Facebook login.");
+                            Log.d("jyr", "Error: " + err);
+                            Log.d("jyr", "Uh oh. The user cancelled the Facebook login.");
                         } else
 
                             //sign up
                             if (!user.getBoolean("completed")) {
 
 
-//                                new SignUpNext(user).execute(Profile.getCurrentProfile().getProfilePictureUri(Constants.PROFILE_WIDTH, Constants.PROFILE_HEIGHT).toString());
-
-                                //load profile image from facebook url and call signUpNext()
                                 new LoadImage(new LoadImage.AfterLoadImage() {
                                     @Override
                                     public void next(Bitmap bitmap) {
@@ -92,8 +95,21 @@ public class SignUpFragment extends Fragment {
 
                             //sign in
                             else {
-                                Intent intent = new Intent(getActivity(), CameraActivity.class);
-                                startActivity(intent);
+
+                                //1. 연락처 서버에 올리기
+                                //2. 연락처로 친구 목록 동기화
+                                //3. 로컬로 친구들 불러오기
+                                ParseAPI.initialize(ParseUser.getCurrentUser(), getActivity(), new Handler() {
+                                    @Override
+                                    public void handleMessage(Message msg) {
+                                        super.handleMessage(msg);
+                                        Intent intent = new Intent(getActivity(), CameraActivity.class);
+                                        startActivity(intent);
+                                        getActivity().finish();
+                                    }
+
+                                });
+
                             }
 
 
@@ -108,8 +124,9 @@ public class SignUpFragment extends Fragment {
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         Log.d("jyr", "onActivityResult singup fragment");
-        if(requestCode== Constants.REQUEST_FACEBOOK_LOGIN)
+        if(requestCode==Constants.REQUEST_FACEBOOK_LOGIN)
             ParseFacebookUtils.onActivityResult(requestCode, resultCode, data);
 
 

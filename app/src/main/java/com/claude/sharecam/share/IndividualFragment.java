@@ -11,6 +11,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,13 +26,61 @@ import android.widget.TextView;
 
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
-import com.claude.sharecam.loader.PersonLoader;
+import com.claude.sharecam.Util;
+import com.claude.sharecam.loader.IndividualLoader;
+//import com.claude.sharecam.loader.ShareIndividualLoader;
+import com.claude.sharecam.parse.Contact;
 import com.claude.sharecam.view.ImageViewRecyclable;
+import com.parse.GetDataCallback;
+import com.parse.ParseException;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+/**
+ 연락처 , 쉐어캠 친구 추가
+ */
 public class IndividualFragment extends Fragment{
+
+    public static final String TAG="IndividualFragment";
+
+    //호출하는 activity에서 구현
+    public interface AddedItems{
+        void setAddedItems(ArrayList<IndividualItem> addedItems);
+        ArrayList<IndividualItem> getAddedItems();
+        void addItem(IndividualItem individualItem);
+        void removeItem(IndividualItem individualItem);
+    }
+
+
+    //액션바 아이템
+    public interface ActionbarItems{
+        void clickActionItem1();
+    }
+    AddedItems addedItems;
+    ActionbarItems actionbarItems;
+
+    ArrayList<IndividualItem> contactItems = null;
+    ArrayList<IndividualItem> friendItems = null;
+
+    ArrayList<IndividualItem> searchContactItems;
+    ArrayList<IndividualItem> searchFriendItems;
+
+    public int mode;//모드에 따라 데이터를 불러와 할당하는 종루가 달라진다.
+    public static final String MODE="mode";
+
+    public static final int ADD_NORMAL_MODE=0;// 쉐어캠 친구, 연락처 목록만 불러옴
+    public static final int ADD_SHARE_USER_MODE=1;// 쉐어캠 친구, 연락처, 공유 대상으로 추가되어 있던 사용자 목록을 불러온다.
+//    //the name of extra data
+//    public static final String PARENT_ACTIVITY="parentActivity";
+//
+//    //the values of extra data
+//    public static final int PARENT_SHARE_ACTIVITY=0;
+//    public static final int PARENT_ADD_GROUP_ACTIVITY=1;
+//    public static final int PARENT_DEFAULT_ACTIVITY=PARENT_SHARE_ACTIVITY;
+
+//    public int parentActivity;
+
 
     //    private FragmentTabHost mTabHost;
     private EditText searchPersonET;
@@ -55,6 +105,10 @@ public class IndividualFragment extends Fragment{
         View root=inflater.inflate(R.layout.fragment_person, container, false);
 
 
+        addedItems=(AddedItems)getActivity();
+        mode=getArguments().getInt(MODE);
+//        parentActivity=getArguments().getInt(PARENT_ACTIVITY,PARENT_DEFAULT_ACTIVITY);
+
         searchPersonET= (EditText) root.findViewById(R.id.searchPersonET);
         apRecycleView=(RecyclerView)root.findViewById(R.id.apRecycleView);
         individualListview=(ExpandableListView)root.findViewById(R.id.individualListview);
@@ -62,39 +116,62 @@ public class IndividualFragment extends Fragment{
         LinearLayoutManager linearLayoutManager=new LinearLayoutManager(getActivity());
         linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         apRecycleView.setLayoutManager(linearLayoutManager);
-        apAdapter=new AddedPersonAdapter(((ShareActivity)getActivity()).addedItems);
+        apAdapter=new AddedPersonAdapter(addedItems.getAddedItems());
         apRecycleView.setAdapter(apAdapter);
 
+        searchFriendItems=new ArrayList<IndividualItem>();
+        searchContactItems=new ArrayList<IndividualItem>();
 
 
 
+
+        if(mode==ADD_NORMAL_MODE)
+        {
+            actionbarItems=(ActionbarItems)getActivity();
+            Util.setActionbarItems(getActivity(), new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    actionbarItems.clickActionItem1();
+                }
+            });
+        }
+
+        //공유 대상을 설정 할 떄 (ShareActivity에서 실행한 경우 )
         //연락처, 쉐어캠 친구 데이터를 아직 불러오지 않은 경우
-        if(((ShareActivity)getActivity()).contactItems ==null ||  ((ShareActivity)getActivity()).friendItems==null) {
+        if((contactItems ==null ||  friendItems==null)) {
             Log.d("jyr", "load data");
 
             //개인, 쉐어캠 친구 데이터들 불러옴
-            getLoaderManager().initLoader(Constants.PERSON_LOADER, null, new LoaderManager.LoaderCallbacks<IndividualItemList>() {
+            getLoaderManager().initLoader(Constants.SHARE_INDIVIDUAL_LOADER, null, new LoaderManager.LoaderCallbacks<IndividualItemList>() {
                 @Override
                 public Loader<IndividualItemList> onCreateLoader(int id, Bundle args) {
 
-                    return new PersonLoader(getActivity());
+                    if(mode==ADD_NORMAL_MODE)
+                        return new IndividualLoader(getActivity(),false);
+                    else if(mode==ADD_SHARE_USER_MODE)
+                        return new IndividualLoader(getActivity(),true);
+                    else
+                        return new IndividualLoader(getActivity(),false);
+
                 }
 
                 @Override
                 public void onLoadFinished(Loader<IndividualItemList> loader, IndividualItemList data) {
 
                     Log.d("jyr", "person item list on load finished");
-                    if(((ShareActivity)getActivity()).contactItems ==null ||  ((ShareActivity)getActivity()).friendItems==null)
+                    if(contactItems ==null || friendItems==null)
                     {
 
-
                         //불러온 데이터 저장
-                        ((ShareActivity) getActivity()).contactItems = data.contactItems;
-                        ((ShareActivity) getActivity()).friendItems = data.friendItems;
+                        contactItems=data.contactItems;
+                        friendItems=data.friendItems;
 //                        setAdapter(getArguments().getInt(MODE));
 
-                        //추가된 데이터들 설정
-                        ((ShareActivity) getActivity()).setAddedItems(data.addedItems);
+                        if(mode==ADD_SHARE_USER_MODE) {
+                            //추가된 데이터들 설정
+                            addedItems.setAddedItems(data.addedItems);
+                        }
+//                        ((ShareActivity) getActivity()).setAddedItems(data.addedItems);
                         refreshItems();
 
                         setIndividualAdapter();
@@ -102,17 +179,60 @@ public class IndividualFragment extends Fragment{
 
                     }
                 }
-
                 @Override
                 public void onLoaderReset(Loader<IndividualItemList> loader) {
 
                 }
             });
         }
+
+        //데이터를 불러왔던 경우 그대로 설정
         else {
             setIndividualAdapter();
         }
 
+
+        searchPersonET.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+                searchContactItems.clear();
+                searchFriendItems.clear();
+
+                String searchStr=searchPersonET.getText().toString();
+
+                for(int i=0; i<friendItems.size(); i++)
+                {
+                    if(friendItems.get(i).personName.contains(searchStr))
+                    {
+                        searchFriendItems.add(friendItems.get(i));
+                    }
+                }
+
+                for(int i=0; i<contactItems.size(); i++)
+                {
+                    if(contactItems.get(i).personName.contains(searchStr))
+                    {
+                        searchContactItems.add(contactItems.get(i));
+                    }
+                }
+
+                individualAdapter.setItems(searchContactItems,searchFriendItems);
+                individualAdapter.notifyDataSetChanged();
+
+
+            }
+        });
 /*
         Bundle args2=new Bundle();
         args2.putInt(PersonListFragment.MODE, PersonListFragment.CONTACT);
@@ -134,10 +254,132 @@ public class IndividualFragment extends Fragment{
         return root;
     }
 
+
+//    public void setAddedItmes(ArrayList<IndividualItem> items)
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                ((ShareActivity)getActivity()).addedItems=items;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                ((AddGroupActivity)getActivity()).addedItems=items;
+//        }
+//    }
+//
+//    public ArrayList<IndividualItem> getAddedItems()
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                return ((ShareActivity)getActivity()).addedItems;
+//    public void setContactItems(ArrayList<IndividualItem> items)
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                ((ShareActivity)getActivity()).contactItems=items;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                ((AddGroupActivity)getActivity()).contactItems=items;
+//        }
+//    }
+//
+//    public ArrayList<IndividualItem> getContactItems()
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                return ((ShareActivity)getActivity()).contactItems;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                return   ((AddGroupActivity)getActivity()).contactItems;
+//        }
+//    }
+//
+//    public void setFriendItems(ArrayList<IndividualItem> items)
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                ((ShareActivity)getActivity()).friendItems=items;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                ((AddGroupActivity)getActivity()).friendItems=items;
+//        }
+//
+//    }
+//
+//    public ArrayList<IndividualItem> getFriendItems()
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                return ((ShareActivity)getActivity()).friendItems;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                return   ((AddGroupActivity)getActivity()).friendItems;
+//        }
+//    }
+
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                return   ((AddGroupActivity)getActivity()).addedItems;
+//        }
+////    }
+//    public void setContactItems(ArrayList<IndividualItem> items)
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                ((ShareActivity)getActivity()).contactItems=items;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                ((AddGroupActivity)getActivity()).contactItems=items;
+//        }
+//    }
+//
+//    public ArrayList<IndividualItem> getContactItems()
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                return ((ShareActivity)getActivity()).contactItems;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                return   ((AddGroupActivity)getActivity()).contactItems;
+//        }
+//    }
+//
+//    public void setFriendItems(ArrayList<IndividualItem> items)
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                ((ShareActivity)getActivity()).friendItems=items;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                ((AddGroupActivity)getActivity()).friendItems=items;
+//        }
+//
+//    }
+//
+//    public ArrayList<IndividualItem> getFriendItems()
+//    {
+//        switch(parentActivity)
+//        {
+//            default:
+//            case PARENT_SHARE_ACTIVITY:
+//                return ((ShareActivity)getActivity()).friendItems;
+//            case PARENT_ADD_GROUP_ACTIVITY:
+//                return   ((AddGroupActivity)getActivity()).friendItems;
+//        }
+//    }
+
     //연락처, 쉐어캠 친구 리스트 설정
     private void  setIndividualAdapter()
     {
-        individualAdapter=new IndividualAdapter(getActivity(),((ShareActivity)getActivity()).contactItems,((ShareActivity)getActivity()).friendItems);
+        individualAdapter=new IndividualAdapter(getActivity(),contactItems,friendItems);
 
         individualListview.setAdapter(individualAdapter);
 
@@ -145,6 +387,23 @@ public class IndividualFragment extends Fragment{
         for(int i=0; i<IndividualAdapter.GROUP_NUM; i++)
         {
             individualListview.expandGroup(i);
+        }
+
+        //쉐어캠 친구들의 경우 사진 프로필 사진 설정
+        for(int i=0; i<friendItems.size(); i++)
+        {
+            final int index=i;
+            friendItems.get(index).friendProfileFile.getDataInBackground(new GetDataCallback() {
+                @Override
+                public void done(byte[] bytes, ParseException e) {
+                    if (e == null) {
+                        friendItems.get(index).friendProfileBytes = bytes;
+                        individualAdapter.notifyDataSetChanged();
+                        apAdapter.notifyDataSetChanged();
+                    }
+
+                }
+            });
         }
     }
     public void refreshItems()
@@ -160,11 +419,11 @@ public class IndividualFragment extends Fragment{
         IndividualItem addedIndividualItem;
 
         //연락처에서 쉐어캠 친구를 클릭한 경우 쉐어캠 친구 item넘겨줌
-        if(individualItem.MODE== IndividualItem.CONTACT && individualItem.isFriend)
-        {
-            addedIndividualItem =((ShareActivity)getActivity()).friendItems.get(individualItem.friendIndex);
-        }
-        else
+//        if(individualItem.MODE== IndividualItem.CONTACT && individualItem.isFriend)
+//        {
+//            addedIndividualItem =friendItems.get(individualItem.friendIndex);
+//        }
+//        else
             addedIndividualItem = individualItem;
 
         if(!addedIndividualItem.added)
@@ -178,7 +437,7 @@ public class IndividualFragment extends Fragment{
         apRecycleView.setVisibility(View.VISIBLE);
         individualItem.added=true;
         Log.d("jyr","addItem+"+ individualItem.personName);
-        ((ShareActivity)getActivity()).addedItems.add(individualItem);
+        addedItems.addItem(individualItem);
         apAdapter.notifyDataSetChanged();
 //        apAdapter.notifyDataSetChanged();
     }
@@ -188,10 +447,10 @@ public class IndividualFragment extends Fragment{
         Log.d("jyr","removeItem+"+ individualItem.personName);
 //        int removePosition=((ShareActivity) getActivity()).addedItems.size()-1;
         individualItem.added=false;
-        ((ShareActivity)getActivity()).addedItems.remove(individualItem);
-        Log.d("jyr","addedItem size= "+((ShareActivity)getActivity()).addedItems.size());
+        addedItems.removeItem(individualItem);
+//        Log.d("jyr","addedItem size= "+((ShareActivity)getActivity()).addedItems.size());
         apAdapter.notifyDataSetChanged();
-        if(((ShareActivity)getActivity()).addedItems.size()==0)
+        if(addedItems.getAddedItems().size()==0)
             apRecycleView.setVisibility(View.GONE);
     }
 
@@ -228,29 +487,34 @@ public class IndividualFragment extends Fragment{
 
         // Replace the contents of a view (invoked by the layout manager)
         @Override
-        public void onBindViewHolder(ViewHolder viewHolder, final int position) {
+        public void onBindViewHolder(final ViewHolder viewHolder, final int position) {
 
             // - get data from your itemsData at this position
             // - replace the contents of the view with that itemsData
 
             viewHolder.addedPersonName.setText(addedItems.get(position).personName);
 
-            if(addedItems.get(position).contactProfile !=null) {
 
                 //쉐어캠 친구 프로필
-                if (addedItems.get(position).MODE == IndividualItem.FRIEND || addedItems.get(position).isFriend) {
+                if (addedItems.get(position).MODE == IndividualItem.FRIEND) {
 
-                    Bitmap bmp = BitmapFactory.decodeByteArray(addedItems.get(position).friendProfile, 0, addedItems.get(position).friendProfile.length);
-                    viewHolder.addedPersonProfile.setImageBitmap(bmp);
+                    if(addedItems.get(position).friendProfileBytes!=null)
+                    {
+                        Bitmap bmp = BitmapFactory.decodeByteArray(addedItems.get(position).friendProfileBytes,0,addedItems.get(position).friendProfileBytes.length);
+                        viewHolder.addedPersonProfile.setImageBitmap(bmp);
+                    }
+//                    Bitmap bmp = BitmapFactory.decodeByteArray(addedItems.get(position).friendProfile, 0, addedItems.get(position).friendProfile.length);
+//                    viewHolder.addedPersonProfile.setImageBitmap(bmp);
 // Set the Bitmap data to the ImageView
 
 //                    Picasso.with(getActivity()).load(addedItems.get(position).contactProfile).into(viewHolder.addedPersonProfile);
                 }
-                else if (addedItems.get(position).MODE == IndividualItem.CONTACT)
+                else if (addedItems.get(position).MODE == IndividualItem.CONTACT && addedItems.get(position).contactProfile!=null)
                     viewHolder.addedPersonProfile.setImageURI(Uri.parse(addedItems.get(position).contactProfile));
-            }
-            else
-                viewHolder.addedPersonProfile.setImageResource(R.mipmap.profile);
+                else{
+                    viewHolder.addedPersonProfile.setImageResource(R.mipmap.profile);
+                }
+
 
             viewHolder.addedPersonProfile.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -295,6 +559,7 @@ public class IndividualFragment extends Fragment{
         ArrayList<IndividualItem> contactItems;
         ArrayList<IndividualItem> friendItems;
 
+
         GroupViewHolder groupViewHolder;
         ChildViewHolder childViewHolder;
 
@@ -306,6 +571,12 @@ public class IndividualFragment extends Fragment{
             this.friendItems=friendItems;
         }
 
+
+        public void setItems(ArrayList<IndividualItem> contactItems, ArrayList<IndividualItem> friendItems)
+        {
+            this.contactItems=contactItems;
+            this.friendItems=friendItems;
+        }
         private ArrayList<IndividualItem> getIndividualItem(int position)
         {
             switch (position)
@@ -416,31 +687,55 @@ public class IndividualFragment extends Fragment{
 
 //            else{
 
-                childViewHolder.individualLayout.setVisibility(View.VISIBLE);
-                if(individualItem.isFriend)
-                    childViewHolder.personNameTxt.setText(individualItem.personName);
-                else
-                    childViewHolder.personNameTxt.setText(individualItem.personName);
-                if(individualItem.contactProfile !=null) {
+//            Log.d(TAG,"before before set profie");
+            childViewHolder.individualLayout.setVisibility(View.VISIBLE);
+//            if(individualItem.isFriend)
+//                childViewHolder.personNameTxt.setText(individualItem.personName);
+//            else
+                childViewHolder.personNameTxt.setText(individualItem.personName);
+//            if(individualItem.contactProfile !=null) {
 
-                    //쉐어캠 친구인 경우
-                    if (individualItem.MODE == IndividualItem.FRIEND || individualItem.isFriend)
-                        Picasso.with(getActivity()).load(individualItem.contactProfile).into(childViewHolder.personProfileImg);
-                        //연락처인 경우
-                    else if (individualItem.MODE == IndividualItem.CONTACT)
-                        childViewHolder.personProfileImg.setImageURI(Uri.parse(individualItem.contactProfile));
 
+            //쉐어캠 친구인 경우
+            if (individualItem.MODE == IndividualItem.FRIEND)
+            {
+                    Log.d(TAG,"before set profie");
+                if(individualItem.friendProfileBytes!=null)
+                {
+                    Bitmap bmp = BitmapFactory.decodeByteArray(individualItem.friendProfileBytes,0,individualItem.friendProfileBytes.length);
+                    childViewHolder.personProfileImg.setImageBitmap(bmp);
                 }
-                else
-                    childViewHolder.personProfileImg.setImageResource(R.mipmap.profile);
+//                individualItem.friendProfileFile.getDataInBackground(new GetDataCallback() {
+//                    @Override
+//                    public void done(byte[] bytes, ParseException e) {
+//                        Log.d(TAG, "set profie");
+//                        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//                        childViewHolder.personProfileImg.setImageBitmap(bmp);
+////                        notifyDataSetChanged();
+//                    }
+//                });
+//                    Picasso.with(getActivity()).load(individualItem.contactProfile).into(childViewHolder.personProfileImg);
+            }
 
 
-                childViewHolder.addPersonBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      clickItem(individualItem);
-                    }
-                });
+            //연락처인 경우
+            else if (individualItem.MODE == IndividualItem.CONTACT && individualItem.contactProfile!=null)
+                childViewHolder.personProfileImg.setImageURI(Uri.parse(individualItem.contactProfile));
+            else
+                childViewHolder.personProfileImg.setImageResource(R.mipmap.profile);
+
+//
+//            }
+//            else
+//                childViewHolder.personProfileImg.setImageResource(R.mipmap.profile);
+
+
+            childViewHolder.addPersonBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    clickItem(individualItem);
+                }
+            });
 
 //            }
             return v;

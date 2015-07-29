@@ -1,0 +1,18 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" tools:context="com.claude.sharecam.main.MyAlbumFragment">
+
+
+    <ImageView
+        android:id="@+id/individualAlbumBtn"
+        android:src="@mipmap/ic_action_accept"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- TODO: Update blank fragment layout -->
+    <!--<android.support.v7.widget.RecyclerView-->
+        <!--android:id="@+id/myAlbumRecyclerView"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"></android.support.v7.widget.RecyclerView>-->
+
+</FrameLayout>

@@ -12,7 +12,7 @@
     <!-- toast server error -->
     <string name="network_unavailable">네트워크 상태를 확인해 주세요.</string>
     <string name="verification_number_not_matched">입력하신 인증번호가 옳지 않습니다.</string>
-    <string name="unknown_error_code">알려지지 않은 에러입니다.</string>
+    <string name="unknown_error_code">네트워크 연결 상태를 확인해 주세요</string>
     <string name="invalid_phone">전화번호가 옳지 않습니다.</string>
     <string name="phone_already_exist">전화번호로 가입한 회원이 이미 존재합니다.</string>
     <!--<string name="facebook_invalid_access_token">페이스북 로그인에 실패하였습니다.</string>-->
@@ -20,6 +20,7 @@
     <!-- toast-->
     <string name="not_availalbe_click_while_taking_picture_toast">촬영 중에는 클릭할 수 없습니다.</string>
     <string name="you_should_fill_out">입력을 완료해야 합니다.</string>
+    <string name="phone_format_invalid">전화번호의 형식이 올바르지 않습니다.</string>
     <!-- facebook -->
     <string name="facebook_app_id">912014918837079</string>
 
@@ -54,5 +55,27 @@
     <!-- IndividualFragment -->
     <string name="existing_sharecam_friend">쉐어캠에 있어요</string>
     <string name="not_exisiting_sharecam_friend">쉐어캠에 아직 없어요</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_image">ImageActivity</string>
+    <string name="title_activity_upload">UploadActivity</string>
+
+
+    <!-- MainActivity -->
+
+    <!--notification-->
+    <string name="uploading_and_standby">업로드/대기</string>
+    <string name="success">완료</string>
+    <string name="fail">실패</string>
+    <!-- UploadingActivity -->
+
+    <string name="uploading">업로딩</string>
+    <string name="success_uploading">업로드 완료</string>
+    <string name="failed_uploading_state">업로드 실패</string>
+    <string name="standby_uploading_state">업로드 대기 중</string>
+    <string name="uploading_state">업로드 중</string>
+    <string name="success_uploading_state">업로드 성공</string>
+    <string name="finished_uploading_state">업로드 완료</string>
+    <string name="title_activity_add_group">AddGroupActivity</string>
+
 
 </resources>

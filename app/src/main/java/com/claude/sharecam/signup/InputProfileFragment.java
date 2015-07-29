@@ -22,17 +22,19 @@ import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.api.ErrorCode;
 import com.claude.sharecam.camera.CameraActivity;
+import com.claude.sharecam.camera.ImageManipulate;
 import com.claude.sharecam.parse.ParseAPI;
 import com.kbeanie.imagechooser.api.ChooserType;
 import com.kbeanie.imagechooser.api.ChosenImage;
 import com.kbeanie.imagechooser.api.ImageChooserListener;
 import com.kbeanie.imagechooser.api.ImageChooserManager;
+import com.parse.GetDataCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
+//import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +43,7 @@ import java.io.IOException;
 public class InputProfileFragment extends Fragment {
 
 
-    public static final String TAG="inputProfileFragmentTag";
+    public static final String TAG="inputProfileFragment";
     ImageView inputProfileImg;
     EditText inputProfileNameET;
     TextView inputProfileNextBtn;
@@ -64,7 +66,7 @@ public class InputProfileFragment extends Fragment {
         inputProfileNextBtn=(TextView)root.findViewById(R.id.inputProfileNextBtn);
         inputProfilePgb=(ProgressBar)root.findViewById(R.id.inputProfilePgb);
 
-        String profileUrlStr=ParseUser.getCurrentUser().getParseFile("profile").getUrl();
+//        String profileUrlStr=ParseUser.getCurrentUser().getParseFile("profile").getUrl();
         //프로필 사진 없을 경우 디폴트 이미지 세팅
 //        profileUrlStr=profileUrlStr!=null?profileUrlStr:Util.getDrawableUriString(getActivity(),R.mipmap.profile);
         String profileNameStr= ParseUser.getCurrentUser().getUsername();
@@ -75,27 +77,44 @@ public class InputProfileFragment extends Fragment {
          */
         inputProfileNameET.setText(profileNameStr);
         //if profile url exist, load image and set
-        if(profileUrlStr!=null)
+        if(ParseUser.getCurrentUser().getParseFile("profile")!=null)
         {
+            Log.d(TAG,"try to load profile image");
             ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
-            Picasso.with(getActivity()).load(profileUrlStr).into(inputProfileImg, new Callback() {
-                @Override
-                public void onSuccess() {
-                    if( ((SignUpActivity)getActivity())!=null)
-                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
-                }
-                @Override
-                public void onError() {
-                    if( ((SignUpActivity)getActivity())!=null)
-                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
 
+            ParseUser.getCurrentUser().getParseFile("profile").getDataInBackground(new GetDataCallback() {
+                @Override
+                public void done(byte[] bytes, ParseException e) {
+                    ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                    if (e == null) {
+                        inputProfileImg.setImageBitmap(ImageManipulate.byteArrayToBitmap(bytes));
+                    }
+                    else{
+
+                        inputProfileImg.setImageResource(R.mipmap.profile);
+                    }
                 }
             });
+
+//            Picasso.with(getActivity()).load(profileUrlStr).into(inputProfileImg, new Callback() {
+//                @Override
+//                public void onSuccess() {
+//                    if( ((SignUpActivity)getActivity())!=null)
+//                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+//                }
+//                @Override
+//                public void onError() {
+//                    if( ((SignUpActivity)getActivity())!=null)
+//                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+//
+//                }
+//            });
         }
 
 
         //if profile url doesn't exist, set default image
         else{
+            Log.d(TAG,"this user doesn't have profile file ");
             inputProfileImg.setImageResource(R.mipmap.profile);
         }
 
@@ -118,7 +137,7 @@ public class InputProfileFragment extends Fragment {
 
                             @Override
                             public void run() {
-                                Log.d("jyr","change input profile img");
+                                Log.d(TAG,"change input profile img");
 
                                 //upload image to parse and load image to imageview for porifle
                                 try {
@@ -133,10 +152,18 @@ public class InputProfileFragment extends Fragment {
 
                                             if(e==null)
                                             {
+                                                Log.d(TAG,"profile upload done");
+
+                                                /*
                                                 //invalidate origin profile url
                                                 Picasso.with(getActivity()).invalidate(ParseUser.getCurrentUser().getParseFile("profile").getUrl());
                                                 //set imageview to image  i've just upload
                                                 Picasso.with(getActivity()).load(ParseUser.getCurrentUser().getParseFile("profile").getUrl()).into(inputProfileImg);
+                                                */
+                                            }
+                                            else {
+
+                                                ParseAPI.erroHandling(getActivity(),e);
                                             }
                                         }
                                     });
@@ -301,7 +328,7 @@ public class InputProfileFragment extends Fragment {
 //            }       Uri uri= Uri.parse(new File(arItem.get(currentPosition)).toString());
 
 
-            Log.d("jyr", "choose image ");
+            Log.d(TAG, "choose image ");
             //사진 편집 실행
             Intent intent=new AviaryIntent.Builder(getActivity())
                     .setData(data.getData())
@@ -321,7 +348,7 @@ public class InputProfileFragment extends Fragment {
         else if(resultCode == getActivity().RESULT_OK
                 &&(requestCode==Constants.REQUEST_AVAIRY))
         {
-            Log.d("jyr", "choose avairyd ");
+            Log.d(TAG, "choose avairyd ");
             imageChooserManager.submit( ChooserType.REQUEST_PICK_PICTURE , data);
         }
         else {

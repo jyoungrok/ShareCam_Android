@@ -2,6 +2,10 @@ package com.claude.sharecam;
 
 import android.hardware.Camera;
 
+import com.claude.sharecam.main.PictureListWithDate;
+
+import java.util.Date;
+
 /**
  * Created by Claude on 15. 4. 9..
  */
@@ -71,6 +75,13 @@ public class Constants {
 //    public static final String PREF_SHARE_CONTACT="pref_shareContact";
 //    public static final String PREF_SHARE_FRIEND="pref_shareFriend";
 
+    //album pref
+    public static final String PREF_ALBUM_SORT_TYPE="pref_albumSortType";
+
+    //sync pref
+    public static final String PREF_FRIEND_LATST_UPDATED_AT ="pref_friendLatestUpdatedAt";// sync한 friend data중 가장 마지막 updatedAt 저장
+    public static final String PREF_SYNC_CONTACT_TIME ="pref_syncContactUTCTime";// contact sync시도를 마지막으로 한 시간
+
 
 
     //preferance value
@@ -108,6 +119,17 @@ public class Constants {
     public static final Boolean PREF_ONE_TOUCH_DEFAULT=false;
     public static final boolean PREF_CAMERA_FRONT_DEFAULT=false;
     public static final int PREF_CAMERA_MODE_DEFAULT=PREF_CAMERA_ONE_PICTURE_MODE;
+    public static final int PREF_ALBUM_SORT_TYPE_DEFAULT= PictureListWithDate.SORT_BY_PICTURE;
+    public static final long PREF_FRIEND_LAST_UPDATED_AT_DEFAULT =0;
+    public static final long PREF_SYNC_CONTACT_TIME_DEFAULT =0;
+
+
+    //sync 시간 간격
+//    public static final long SYNC_FRIEND_GAP=60*1000*10;//10분에 한번씩 동기화
+//    public static final long SYNC_CONTACT_GAP=60*1000*15;//15분에 한번씩 동기화
+    public static final long SYNC_FRIEND_GAP=0;//10분에 한번씩 동기화
+    public static final long SYNC_CONTACT_GAP=0;//15분에 한번씩 동기화
+
 
     //taking picutre
     public static final int CAPTURE_SECONDS=200;
@@ -138,7 +160,21 @@ public class Constants {
 
 
     //Loader
-    public static final int PERSON_LOADER=1;
+    //연락처, 쉐어캠 친구 목록 loader
+    public static final int SHARE_INDIVIDUAL_LOADER =1;
+    //개인에게 받은 사진 목록
+    public static final int INDIVIDUAL_ALBUM_LOADER=2;
+
+
+    public static final int NUM_LOAD_PICTURE=14;
+    public static final int NUM_LOAD_GROUP=10;
+
+    //UploadActivity
+    public static final int THUMB_NAIL_SIZE=64;
+
+    //album
+    public static final int COL_NUM_SORT_BY_PICTURE=3;
+    public static final int COL_NUM_SORT_BY_DATE=3;
 
 
 

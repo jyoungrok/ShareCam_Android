@@ -21,4 +21,9 @@
 
     <!-- btn -->
     <dimen name="textview_btn_padding">10dp</dimen>
+
+
+
+    <!-- album -->
+    <dimen name="album_grid_space">2dp</dimen>
 </resources>
