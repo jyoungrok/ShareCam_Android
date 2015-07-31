@@ -64,53 +64,60 @@ public class SignUpFragment extends Fragment {
         facebookSignInBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
+                ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
+
                 ParseFacebookUtils.logInWithReadPermissionsInBackground(getActivity(), Arrays.asList("public_profile"), new LogInCallback() {
                     @Override
                     public void done(ParseUser user, ParseException err) {
                         if (user == null) {
                             Log.d("jyr", "Error: " + err);
                             Log.d("jyr", "Uh oh. The user cancelled the Facebook login.");
-                        } else
+                            ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                        }
 
-                            //sign up
-                            if (!user.getBoolean("completed")) {
+                        //sign up
+                        if (!user.getBoolean("completed")) {
 
 
-                                new LoadImage(new LoadImage.AfterLoadImage() {
-                                    @Override
-                                    public void next(Bitmap bitmap) {
+                            new LoadImage(new LoadImage.AfterLoadImage() {
+                                @Override
+                                public void next(Bitmap bitmap) {
 
-                                        ParseUser user=ParseUser.getCurrentUser();
-                                        //update user's profile and name
-                                        ParseFile file = new ParseFile(user.getObjectId()+".png", ImageManipulate.bitmapToByteArray(bitmap));
-                                        user.put("profile", file);
-                                        user.put("username", Profile.getCurrentProfile().getName());
+                                    ParseUser user=ParseUser.getCurrentUser();
+                                    //update user's profile and name
+                                    ParseFile file = new ParseFile(user.getObjectId()+".png", ImageManipulate.bitmapToByteArray(bitmap));
+                                    user.put("profile", file);
+                                    user.put("username", Profile.getCurrentProfile().getName());
 //                                        user.put("name", "name");
-                                        user.saveInBackground();
+                                    user.saveInBackground();
 
-                                        Util.startFragment(getActivity().getSupportFragmentManager(), R.id.signupContainer, new PhoneVerifyFragment(), false, null);
-                                    }
-                                }).execute(Profile.getCurrentProfile().getProfilePictureUri(Constants.PROFILE_WIDTH, Constants.PROFILE_HEIGHT).toString());
-                            }
+                                    Util.startFragment(getActivity().getSupportFragmentManager(), R.id.signupContainer, new PhoneVerifyFragment(), false, null);
+                                    ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                                }
+                            }).execute(Profile.getCurrentProfile().getProfilePictureUri(Constants.PROFILE_WIDTH, Constants.PROFILE_HEIGHT).toString());
+                        }
 
-                            //sign in
-                            else {
+                        //sign in
+                        else {
 
-                                //1. 연락처 서버에 올리기
-                                //2. 연락처로 친구 목록 동기화
-                                //3. 로컬로 친구들 불러오기
-                                ParseAPI.initialize(ParseUser.getCurrentUser(), getActivity(), new Handler() {
-                                    @Override
-                                    public void handleMessage(Message msg) {
-                                        super.handleMessage(msg);
-                                        Intent intent = new Intent(getActivity(), CameraActivity.class);
-                                        startActivity(intent);
-                                        getActivity().finish();
-                                    }
 
-                                });
+                            //1. 연락처 서버에 올리기
+                            //2. 연락처로 친구 목록 동기화
+                            //3. 로컬로 친구들 불러오기
+                            ParseAPI.initialize(ParseUser.getCurrentUser(), getActivity(), new Handler() {
+                                @Override
+                                public void handleMessage(Message msg) {
+                                    super.handleMessage(msg);
+                                    Intent intent = new Intent(getActivity(), CameraActivity.class);
+                                    startActivity(intent);
+                                    getActivity().finish();
+                                }
 
-                            }
+                            });
+
+                        }
 
 
                     }

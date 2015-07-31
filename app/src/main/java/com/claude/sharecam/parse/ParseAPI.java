@@ -19,6 +19,7 @@ import com.parse.FunctionCallback;
 import com.parse.GetCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -28,6 +29,7 @@ import org.json.JSONObject;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -49,7 +51,8 @@ public class ParseAPI {
     public static final String SYNC_ALL_CONTACT ="sync_all_contact";
     public static final String DELETE_CONTACT="delete_contact";
     public static final String SIGN_UP_COMPLETED="sign_up_completed";
-    public static final String SYNC_FRIEND_LIST="sync_friend_list";
+    //    public static final String SYNC_FRIEND_LIST="sync_friend_list";
+    public static final String SYNC_DATA="sync_data";
 
     //parameter
     public static final int RETURN_ALL_FRIENDS_TYPE=0;
@@ -217,7 +220,8 @@ public class ParseAPI {
                                         if (e == null) {
                                             handler.sendEmptyMessage(0);
                                             //친구목록 동기화 시간 설정
-                                            Util.setFriendLastUpdatedAt(context, list);
+                                            setLastUpdatedAt(context,list);
+//                                            Util.setFriendLastUpdatedAt(context, list);
                                         } else
                                             ParseAPI.erroHandling(context, e);
                                     }
@@ -380,13 +384,15 @@ public class ParseAPI {
     public static List<Friend> getFriends_Local(final Context context) throws ParseException {
         ParseQuery<Friend> query=ParseQuery.getQuery(Friend.class);
         query.whereEqualTo("createdBy", ParseUser.getCurrentUser());
+        query.whereEqualTo("deleted",false);
         query.setLimit(1000);
         query.include("friendUser");
-        query.fromLocalDatastore();
+        query.fromPin(LABEL_FRIEND);
 
-            return query.find();
+        return query.find();
 
     }
+
 
     public static List<Individual> getSharePerson_Local(final Context context)
     {
@@ -494,6 +500,7 @@ public class ParseAPI {
             picture.setCreatedBy(createdBy);
             picture.init();
 
+
             for (int j = 0; j < spItems.size(); j++) {
                 //쉐어캠 친구인 경우
                 if (spItems.get(j).getIsFriend()) {
@@ -546,39 +553,132 @@ public class ParseAPI {
         Util.showToast(context, ErrorCode.getToastMessageId(e));
     }
 
-
-
-
-//    public static void syncData(Context context)
-//    {
-//        if(ParseUser.getCurrentUser()==null)
-//        {
-//            Log.d(TAG,"can not sync without sigining in");
+    //친구 동기화 완료 시간 설정
+    public static void setFriendLastUpdatedAt(Context context,long lastUpdatedAt)
+    {
+//        if(friendList.size()==0)
 //            return;
+//        Log.d(TAG,"setFriendLastUpdatedAt");
+//        long lastUpdatedAt=0;
+//        //friend list중 last updatedAt찾기
+//        for(int i=0; i<friendList.size(); i++)
+//        {
+//            if(lastUpdatedAt<friendList.get(i).getFriendUser().getUpdatedAt().getTime()){
+//                lastUpdatedAt=friendList.get(i).getFriendUser().getUpdatedAt().getTime();
+//            }
 //        }
-//
-//
-//    }
+        ((Util)context.getApplicationContext()).editor.putLong(Constants.PREF_FRIEND_LATST_UPDATED_AT, lastUpdatedAt).commit();
+
+    }
+
+    //친구 동기화 했던 마지막 시간 얻어오기
+    public static Date getFriendLastUpdatedAt(Context context)
+    {
+
+        long lastUpdatedAt=((Util)context.getApplicationContext()).pref.getLong(Constants.PREF_FRIEND_LATST_UPDATED_AT, Constants.PREF_FRIEND_LAST_UPDATED_AT_DEFAULT);
+//        Log.d(TAG,new )
+        return new Date(lastUpdatedAt);
+    }
+
+
+    public static void setLastUpdatedAt(Context context,List<Friend> dataList)
+    {
+        if(dataList.size()==0)
+            return;
+        Log.d(TAG,"setFriendLastUpdatedAt");
+        long lastUpdatedAt=0;
+        //friend list중 last updatedAt찾기
+        for(int i=0; i<dataList.size(); i++)
+        {
+            if(lastUpdatedAt<dataList.get(i).getUpdatedAt().getTime()){
+                lastUpdatedAt=dataList.get(i).getUpdatedAt().getTime();
+            }
+        }
+
+        setFriendLastUpdatedAt(context,lastUpdatedAt);
+
+    }
+
+    public static void setLastUpdatedAt(Context context,String className,List<ParseObject> dataList)
+    {
+        if(dataList.size()==0)
+            return;
+        Log.d(TAG,"setLastUpdatedAt "+className);
+        long lastUpdatedAt=0;
+        //friend list중 last updatedAt찾기
+        for(int i=0; i<dataList.size(); i++)
+        {
+            if(lastUpdatedAt<dataList.get(i).getUpdatedAt().getTime()){
+                lastUpdatedAt=dataList.get(i).getUpdatedAt().getTime();
+            }
+        }
+
+        if(className.equals(Friend.CLASS_NAME))
+        {
+            setFriendLastUpdatedAt(context,lastUpdatedAt);
+        }
+    }
+    public static Date getLastUpdatedAt(Context context,String className)
+    {
+        if(className.equals(Friend.CLASS_NAME))
+        {
+            return getFriendLastUpdatedAt(context);
+        }
+        return null;
+    }
+
+
+    public static void pinNewData(String className,List<ParseObject> newData) throws ParseException {
+        Log.d(TAG,"pin new data "+className+" size="+newData.size());
+        if(className.equals(Friend.CLASS_NAME))
+        {
+            ParseObject.pinAll(LABEL_FRIEND,newData);
+        }
+
+    }
+
+    //parse와 data 동기화
+    public static void syncData(final Context context,String className)
+    {
+
+        if(ParseUser.getCurrentUser()==null)
+        {
+            Log.d(TAG,"can not sync without sigining in");
+            return;
+        }
+        Log.d(TAG,"sync data") ;
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        Date syncTime=getLastUpdatedAt(context,className);
+        Log.d(TAG,"syncTime = "+Util.dateToUTCStr(syncTime));
+        params.put("className",className);
+        params.put("syncDate", syncTime);
+        List<ParseObject> newData= null;
+        try {
+            newData = ParseCloud.callFunction(ParseAPI.SYNC_DATA, params);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return;
+        }
+//        Log.d(TAG,"find new friend "+newFriend.size()+"list done");
+
+
+        if(newData.size()!=0)
+        {
+            try {
+                pinNewData(className,newData);
+                setLastUpdatedAt(context,className,newData);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 
     //친구 리스트 서버로 부터 동기화
     public static void syncFriendList(final Context context) {
 
 
-//
-//        ParseQuery<Friend> parseQuery=ParseQuery.getQuery(Friend.class);
-//        parseQuery.fromLocalDatastore();
-//        parseQuery.whereEqualTo("createdBy", ParseUser.getCurrentUser());
-//        parseQuery.include("friendUser");
-//        try {
-//            List<Friend> list=parseQuery.find();
-//            Log.d(TAG,"dfg");
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
 
-        /**
-         *
-         */
         if(ParseUser.getCurrentUser()==null)
         {
             Log.d(TAG,"can not sync without sigining in");
@@ -586,10 +686,13 @@ public class ParseAPI {
         }
         Log.d(TAG,"syncFriendList") ;
         HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("syncTime", Util.getFriendLastUpdatedAt(context));
+        Date syncTime=getFriendLastUpdatedAt(context);
+        Log.d(TAG,"syncTime = "+syncTime);
+        params.put("className",Friend.CLASS_NAME);
+        params.put("syncTime", syncTime);
         List<Friend> newFriend= null;
         try {
-            newFriend = ParseCloud.callFunction(ParseAPI.SYNC_FRIEND_LIST, params);
+            newFriend = ParseCloud.callFunction(ParseAPI.SYNC_DATA, params);
         } catch (ParseException e) {
             e.printStackTrace();
             return;
@@ -602,31 +705,13 @@ public class ParseAPI {
             Log.d(TAG,"pin all new friends"+newFriend.size());
             try {
                 ParseObject.pinAll(LABEL_FRIEND,newFriend);
-                Util.setFriendLastUpdatedAt(context, newFriend);
+                //last updatedAt 갱신
+//                setFriendLastUpdatedAt(context, newFriend);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
         }
 
-        Log.d(TAG,"setFriendLastUpdatedAt");
-        //sync time 갱신
-
-
-        /*
-        ParseCloud.callFunctionInBackground(ParseAPI.SYNC_FRIEND_LIST,params, new FunctionCallback<List<User>>() {
-            public void done(List<User> list, ParseException e) {
-
-                if(e==null)
-                {
-                    Log.d(TAG,"find new friend "+list.size()+"list done");
-
-//                    Log.d(TAG, String.valueOf(result));
-                }
-                else
-                    ParseAPI.erroHandling(context,e);
-
-            }
-        });*/
     }
 
 
@@ -634,8 +719,8 @@ public class ParseAPI {
     // local 데이터베이스에 연락처 데이터를 듕기화한 뒤 (추가된 것들 추가 , 삭제 된 것들 삭제)
     // 변경사항을 서버에 업로드
     // 추가된 연락처에 대해 친구가 있는지 검사 후 있을 시 친구 추가
-    // onlyForNewContact - true - 새로운 연락처가 있을 때만 친구목록 동기화 실행
-    //                   - false - 새로운 연락처가 없더라도 서버로 부터 새로운 친구목록 동기화
+    // onlyForNewContact - true - 새로운 연락처가 있을 때만 친구목록 동기화 실행 // 자동으로 동기화 수행시
+    //                   - false - 새로운 연락처가 없더라도 서버로 부터 새로운 친구목록 동기화 // 사용자가 수동으로 동기화 요청 할 시
     public static void syncContact(final Context context, final boolean onlyForNewContact) throws ParseException {
 
         Log.d(TAG,"syncContact");
@@ -729,101 +814,7 @@ public class ParseAPI {
         }
 
         Util.setContactSyncTime(context);
-        /*
-        query.findInBackground(new FindCallback<Contact>() {
-            @Override
-            public void done(List<Contact> dataItems, ParseException e) {
-                Log.d(TAG,"find "+dataItems.size()+"contact from local done");
-//                Util.logCurrentThread(TAG);
-                if(e==null)
-                {
-                    //삭제된 연락처 있는지 확인
-                    //추가된 연락처 찾기
-                    for(int i=0; i<dataItems.size(); i++)
-                    {
-                        for(int j=0; j<contactItems.size(); j++)
-                        {
-                            //데이터가 같은 것이 있는 경우
-                            if(dataItems.get(i).getPhone().equals(Util.convertToInternationalNumber(context,contactItems.get(j).phoneNumber)))
-                            {
-                                contactItems.remove(j);
-                                break;
-                            }
-                            //데이터가 같은 것이 없는 경우 -> 삭제된 연락처
-                            else if(j==contactItems.size()-1)
-                            {
-                                deletedContactItems.add(dataItems.get(i));
-                            }
-                        }
-                    }
 
-                    //추가된 연락처들
-                    for(int i=0; i<contactItems.size(); i++)
-                    {
-                        Contact contact=new Contact();
-                        contact.setCreatedBy(ParseUser.getCurrentUser());
-                        contact.setPhoneNumber(context, contactItems.get(i).phoneNumber);
-                        contact.setACL(ParseUser.getCurrentUser());
-                        addedContactItems.add(contact);
-                    }
-
-                    // 삭제된 연락처 데이터 삭제 (서버, 로컬)
-                    // 추가된 연락처 데이터 추가 (서버, 로컬)
-                    ParseObject.deleteAllInBackground(deletedContactItems,new SCDeleteCallback(context, new SCDeleteCallback.Callback() {
-                        @Override
-                        public void done() {
-                            Log.d(TAG,"delete "+deletedContactItems.size()+"contacts done");
-                            ParseObject.unpinAllInBackground(LABEL_CONTACT,deletedContactItems, new SCDeleteCallback(context, new SCDeleteCallback.Callback() {
-                                @Override
-                                public void done() {
-                                    Log.d(TAG, "delete " + deletedContactItems.size() + "contacts local done");
-                                    ParseObject.saveAllInBackground(addedContactItems,new SCSaveCallback(context, new SCSaveCallback.Callback() {
-                                        @Override
-                                        public void done() {
-                                            Log.d(TAG,"save "+addedContactItems.size()+"contacts done");
-                                            ParseObject.pinAllInBackground(LABEL_CONTACT,addedContactItems,new SCSaveCallback(context, new SCSaveCallback.Callback() {
-                                                @Override
-                                                public void done() {
-                                                    Log.d(TAG,"save "+addedContactItems.size()+"contacts local done");
-
-                                                    HashMap<String, Object> params = new HashMap<String, Object>();
-                                                    params.put("type", RETURN_ADDED_FRIENDS_TYPE);
-
-                                                    if(onlyForNewContact==true && addedContactItems.size()==0)
-                                                    {
-                                                        handler.sendEmptyMessage(0);
-                                                        return;
-                                                    }
-                                                    ParseCloud.callFunctionInBackground(ParseAPI.SYNC_ALL_CONTACT, params, new FunctionCallback<List<Friend>>() {
-                                                        public void done(final List<Friend> result, ParseException e) {
-                                                            Log.d(TAG,"syncAllContact Done");
-
-                                                            ParseObject.pinAllInBackground(LABEL_FRIEND,result,new SCSaveCallback(context, new SCSaveCallback.Callback() {
-                                                                @Override
-                                                                public void done() {
-                                                                    Log.d(TAG,"save new "+result.size()+" friend to local done");
-                                                                    handler.sendEmptyMessage(0);
-                                                                }
-                                                            }));
-                                                        }
-                                                    });
-
-                                                }
-                                            }));
-                                        }
-                                    }));
-                                }
-                            }));
-                        }
-                    }));
-
-                }
-                else{
-                    ParseAPI.erroHandling(context, e);
-                }
-            }
-        });
-        */
 
     }
 }

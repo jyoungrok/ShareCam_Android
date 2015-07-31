@@ -126,9 +126,9 @@ public class Constants {
 
     //sync 시간 간격
 //    public static final long SYNC_FRIEND_GAP=60*1000*10;//10분에 한번씩 동기화
-//    public static final long SYNC_CONTACT_GAP=60*1000*15;//15분에 한번씩 동기화
+    public static final long SYNC_CONTACT_GAP=60*1000*15;//15분에 한번씩 동기화
     public static final long SYNC_FRIEND_GAP=0;//10분에 한번씩 동기화
-    public static final long SYNC_CONTACT_GAP=0;//15분에 한번씩 동기화
+//    public static final long SYNC_CONTACT_GAP=0;//15분에 한번씩 동기화
 
 
     //taking picutre

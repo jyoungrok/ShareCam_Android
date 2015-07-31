@@ -12,6 +12,7 @@ import com.parse.ParseUser;
 @ParseClassName("Friend")
 public class Friend extends ParseObject{
 
+    public static final String CLASS_NAME="Friend";
 //    public ParseUser getCreatedBy()
 //    {
 //        return getParseUser("createdBy");

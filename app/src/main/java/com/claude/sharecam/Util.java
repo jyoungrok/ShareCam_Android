@@ -53,10 +53,12 @@ import com.google.i18n.phonenumbers.Phonenumber;
 
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseObject;
 import com.parse.ParsePush;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -71,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * Created by Claude on 15. 4. 9..
@@ -113,8 +116,12 @@ public class Util extends Application implements IAviaryClientCredentials {
 //        s3=new S3();
 
 //        aws=new AWS();
+        //db
         dbHelper = OpenHelperManager.getHelper(this, DBHelper.class);
-        apiManager = ApiManager.newInstance(getApplicationContext());
+//        apiManager = ApiManager.newInstance(getApplicationContext());
+
+
+
 
 
         // Enable Local Datastore.
@@ -150,6 +157,19 @@ public class Util extends Application implements IAviaryClientCredentials {
         /**
          * Test Code
          */
+
+
+//        ParseQuery<User> query=ParseQuery.getQuery(User.class);
+//        query.findInBackground(new FindCallback<User>() {
+//            @Override
+//            public void done(List<User> list, com.parse.ParseException e) {
+//
+//                for(int i=0; i<list.size(); i++)
+//                {
+//                    Log.d(TAG,list.get(i).get("authData").toString());
+//                }
+//            }
+//        });
 //        Log.d("jyr","start test");
 //        ParseQuery<Test> query=ParseQuery.getQuery(Test.class);
 //        query.findInBackground(new FindCallback<Test>() {
@@ -223,11 +243,13 @@ public class Util extends Application implements IAviaryClientCredentials {
 
     /**
      * 서버에서 변환된 데이터들을 동기화
+     * 친구 / 연락처 데이터
      */
     public static void syncData(final Context context)
     {
         if(ParseUser.getCurrentUser()!=null) {
 
+            Log.d(TAG,"syncData");
             final Handler handler = new Handler() {
                 @Override
                 public void handleMessage(Message msg) {
@@ -241,12 +263,12 @@ public class Util extends Application implements IAviaryClientCredentials {
 
                     try {
                         Calendar friendCal=Calendar.getInstance();
-                        friendCal.setTime(Util.getFriendLastUpdatedAt(context));
+                        friendCal.setTime(ParseAPI.getFriendLastUpdatedAt(context));
                         //최소 동기화 시간이 지난 경우 동기화 시도
                         if(Calendar.getInstance().getTimeInMillis()-friendCal.getTimeInMillis()>Constants.SYNC_FRIEND_GAP) {
 
-                            //친구 연락처 목록 동기화
-                            ParseAPI.syncFriendList(context);
+                            //친구 목록 동기화
+                            ParseAPI.syncData(context, Friend.CLASS_NAME);
                         }
                         else {
                             Log.d(TAG,"not sync friendList ");
@@ -535,6 +557,7 @@ public class Util extends Application implements IAviaryClientCredentials {
     public static ArrayList<IndividualItem> getContactList(Context context) {
 
 
+
         ArrayList<IndividualItem> contactItems = new ArrayList<IndividualItem>();
         ArrayList numberList = new ArrayList();
         // 로컬에서 연락처 데이터 불러옴
@@ -698,32 +721,7 @@ public class Util extends Application implements IAviaryClientCredentials {
         return new Date(syncTime);
     }
 
-    //친구 동기화 완료 시간 설정
-    public static void setFriendLastUpdatedAt(Context context,List<Friend> friendList)
-    {
-        if(friendList.size()==0)
-            return;
-        Log.d(TAG,"setFriendLastUpdatedAt");
-        long lastUpdatedAt=0;
-        //friend list중 last updatedAt찾기
-        for(int i=0; i<friendList.size(); i++)
-        {
-            if(lastUpdatedAt<friendList.get(i).getFriendUser().getUpdatedAt().getTime()){
-                lastUpdatedAt=friendList.get(i).getFriendUser().getUpdatedAt().getTime();
-            }
-        }
-        ((Util)context.getApplicationContext()).editor.putLong(Constants.PREF_FRIEND_LATST_UPDATED_AT, lastUpdatedAt).commit();
 
-    }
-
-    //친구 동기화 했던 마지막 시간 얻어오기
-    public static Date getFriendLastUpdatedAt(Context context)
-    {
-
-        long lastUpdatedAt=((Util)context.getApplicationContext()).pref.getLong(Constants.PREF_FRIEND_LATST_UPDATED_AT, Constants.PREF_FRIEND_LAST_UPDATED_AT_DEFAULT);
-//        Log.d(TAG,new )
-        return new Date(lastUpdatedAt);
-    }
 
     public static void logCurrentThread(String TAG)
     {
@@ -734,5 +732,12 @@ public class Util extends Application implements IAviaryClientCredentials {
         else {
             Log.d(TAG,"another thread");
         }
+    }
+
+    public static String dateToUTCStr(Date date)
+    {
+        SimpleDateFormat sdf=new SimpleDateFormat("MM/dd/yyyy KK:mm:ss a Z");
+        sdf.setTimeZone( TimeZone.getTimeZone("UTC") );
+        return sdf.format(date).toString();
     }
 }
