@@ -20,7 +20,7 @@
 
         <ImageView
             android:id="@+id/inputProfileImg"
-            android:src="@mipmap/ic_action_accept"
+            android:src="@mipmap/profile"
             android:layout_gravity="center_horizontal"
             android:layout_width="96dp"
             android:layout_height="96dp" />

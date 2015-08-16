@@ -1,5 +1,6 @@
 package com.claude.sharecam.main;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -7,13 +8,15 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
+import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.share.GroupFragment;
-import com.claude.sharecam.share.IndividualFragment;
+import com.claude.sharecam.config.AccountFragment;
+import com.claude.sharecam.config.ModifyProfileFragment;
 import com.claude.sharecam.view.SlidingTabLayout;
 
 import java.util.Locale;
@@ -23,15 +26,22 @@ public class MainActivity extends ActionBarActivity {
     SlidingTabLayout mainSlidingTabs;
     ViewPager mainPager;
     MainPagerAdpater mainPagerAdpater;
+    FrameLayout mainContainer;
+    LinearLayout mainProgressLayout;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mainContainer=(FrameLayout)findViewById(R.id.mainContainer);
+        mainProgressLayout=(LinearLayout)findViewById(R.id.mainProgressLayout);
         Util.startFragment(getSupportFragmentManager(),R.id.mainContainer,new MainFragment(),false,null);
-
+        Util.setBackBtnListener(this,getSupportFragmentManager());
         getSupportActionBar().hide();
+
+
 //        mainSlidingTabs= (SlidingTabLayout) findViewById(R.id.mainSlidingTabs);
 //        mainPager=(ViewPager) findViewById(R.id.mainPager);
 //        mainPagerAdpater=new MainPagerAdpater(getSupportFragmentManager());
@@ -95,5 +105,43 @@ public class MainActivity extends ActionBarActivity {
             return null;
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(ModifyProfileFragment.TAG);
+        if (fragment != null) {
+            ((ModifyProfileFragment) fragment).onActivityResult(requestCode, resultCode, data);
+        }
+        Fragment accountFragment=getSupportFragmentManager().findFragmentByTag(AccountFragment.TAG);
+        if(accountFragment!=null)
+        {
+            ((AccountFragment) accountFragment).onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    public void setProgressLayout(int state)
+    {
+
+        switch(state)
+        {
+            case Constants.PROGRESS_AND_LAYOUT_VISIBLE:
+                mainContainer.setVisibility(View.VISIBLE);
+                mainProgressLayout.setVisibility(View.VISIBLE);
+                break;
+            case Constants.PROGRESS_VISIBLE:
+                mainContainer.setVisibility(View.GONE);
+                mainProgressLayout.setVisibility(View.VISIBLE);
+                break;
+            case Constants.PROGRESS_INVISIBLE:
+                mainContainer.setVisibility(View.VISIBLE);
+                mainProgressLayout.setVisibility(View.GONE);
+                break;
+
+        }
+    }
+
 
 }

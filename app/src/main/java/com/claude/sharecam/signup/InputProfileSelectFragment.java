@@ -1,12 +1,9 @@
 package com.claude.sharecam.signup;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,36 +11,24 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.aviary.android.feather.sdk.AviaryIntent;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.api.ErrorCode;
 import com.claude.sharecam.camera.CameraActivity;
-import com.claude.sharecam.camera.ImageManipulate;
+import com.claude.sharecam.parse.ProfileSelectFragment;
 import com.claude.sharecam.parse.ParseAPI;
-import com.kbeanie.imagechooser.api.ChooserType;
-import com.kbeanie.imagechooser.api.ChosenImage;
-import com.kbeanie.imagechooser.api.ImageChooserListener;
+import com.claude.sharecam.parse.SCSaveCallback;
+import com.claude.sharecam.parse.User;
 import com.kbeanie.imagechooser.api.ImageChooserManager;
-import com.parse.GetDataCallback;
-import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
-import com.squareup.picasso.Callback;
 //import com.squareup.picasso.Picasso;
 
-import java.io.File;
-import java.io.IOException;
+
+public class InputProfileSelectFragment extends ProfileSelectFragment implements ProfileSelectFragment.ModifyProfileProgress {
 
 
-public class InputProfileFragment extends Fragment {
-
-
-    public static final String TAG="inputProfileFragment";
+    public static final String TAG="InputProfileFragment";
     ImageView inputProfileImg;
     EditText inputProfileNameET;
     TextView inputProfileNextBtn;
@@ -61,6 +46,7 @@ public class InputProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         View root =  inflater.inflate(R.layout.fragment_input_profile, container, false);
 
+
         inputProfileImg=(ImageView)root.findViewById(R.id.inputProfileImg);
         inputProfileNameET=(EditText)root.findViewById(R.id.inputProfileNameET);
         inputProfileNextBtn=(TextView)root.findViewById(R.id.inputProfileNextBtn);
@@ -69,128 +55,59 @@ public class InputProfileFragment extends Fragment {
 //        String profileUrlStr=ParseUser.getCurrentUser().getParseFile("profile").getUrl();
         //프로필 사진 없을 경우 디폴트 이미지 세팅
 //        profileUrlStr=profileUrlStr!=null?profileUrlStr:Util.getDrawableUriString(getActivity(),R.mipmap.profile);
-        String profileNameStr= ParseUser.getCurrentUser().getUsername();
+//        String profileNameStr= ParseUser.getCurrentUser().getUsername();
         newProfileURL="";
+
+        /**
+         * ProfileSelectFragment set
+         */
+        setProfileImageView(inputProfileImg);
+        setModifyProfileProgress(this);
 
         /**
          * 프로필 이미지와 이름 set
          */
-        inputProfileNameET.setText(profileNameStr);
+//        inputProfileNameET.setText(profileNameStr);
         //if profile url exist, load image and set
-        if(ParseUser.getCurrentUser().getParseFile("profile")!=null)
-        {
-            Log.d(TAG,"try to load profile image");
-            ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
-
-            ParseUser.getCurrentUser().getParseFile("profile").getDataInBackground(new GetDataCallback() {
-                @Override
-                public void done(byte[] bytes, ParseException e) {
-                    ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
-                    if (e == null) {
-                        inputProfileImg.setImageBitmap(ImageManipulate.byteArrayToBitmap(bytes));
-                    }
-                    else{
-
-                        inputProfileImg.setImageResource(R.mipmap.profile);
-                    }
-                }
-            });
-
-//            Picasso.with(getActivity()).load(profileUrlStr).into(inputProfileImg, new Callback() {
-//                @Override
-//                public void onSuccess() {
-//                    if( ((SignUpActivity)getActivity())!=null)
-//                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
-//                }
-//                @Override
-//                public void onError() {
-//                    if( ((SignUpActivity)getActivity())!=null)
-//                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
-//
-//                }
-//            });
-        }
-
-
-        //if profile url doesn't exist, set default image
-        else{
-            Log.d(TAG,"this user doesn't have profile file ");
-            inputProfileImg.setImageResource(R.mipmap.profile);
-        }
-
+//        setModifyProfileImg();
 
 
         /**
          * set listener
          */
+/*
+        //프로필 이미지 변경시
+        setOnImageChosen(new OnImageChosen() {
+            @Override
+            public void onImageChosen(final ChosenImage image) {
+//                image.
+                Log.d(TAG, "profile image chosen and try uploading profile image to server");
+                ParseAPI.uploadProfilePicture(image.getFilePathOriginal(), new SCSaveCallback(getActivity(), new SCSaveCallback.Callback() {
+                    @Override
+                    public void done() {
+                        setModifyProfileImg();
+                        ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+//                        /ProfileImg.setImageBitmap(ImageManipulate.byteArrayToBitmap(((User)ParseUser.getCurrentUser()).getProfileFile().));
+                    }
+                }));
+            }
+
+            @Override
+            public void onError(String s) {
+
+            }
+        });
+
         // set pofile image listener
         inputProfileImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-
-                chooseImage(new ImageChooserListener() {
-                    @Override
-                    public void onImageChosen(final ChosenImage chosenImage) {
-
-                        getActivity().runOnUiThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                Log.d(TAG,"change input profile img");
-
-                                //upload image to parse and load image to imageview for porifle
-                                try {
-                                    byte[] profileFile=org.apache.commons.io.FileUtils.readFileToByteArray(new File(chosenImage.getFileThumbnailSmall()));
-                                    ParseFile file = new ParseFile(ParseUser.getCurrentUser().getObjectId()+"."+chosenImage.getExtension(),profileFile);
-                                    ParseUser user=ParseUser.getCurrentUser();
-                                    user.put("profile",file);
-                                    user.saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            inputProfilePgb.setVisibility(View.GONE);
-
-                                            if(e==null)
-                                            {
-                                                Log.d(TAG,"profile upload done");
-
-                                                /*
-                                                //invalidate origin profile url
-                                                Picasso.with(getActivity()).invalidate(ParseUser.getCurrentUser().getParseFile("profile").getUrl());
-                                                //set imageview to image  i've just upload
-                                                Picasso.with(getActivity()).load(ParseUser.getCurrentUser().getParseFile("profile").getUrl()).into(inputProfileImg);
-                                                */
-                                            }
-                                            else {
-
-                                                ParseAPI.erroHandling(getActivity(),e);
-                                            }
-                                        }
-                                    });
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(final String reason) {
-                        getActivity().runOnUiThread(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                inputProfilePgb.setVisibility(View.GONE);
-                                Toast.makeText(getActivity(), reason,
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        });
-
-                    }
-                });
+                ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
+                chooseImage();
+                
             }
-        });
+        });*/
 
         //로그인 완료
         inputProfileNextBtn.setOnClickListener(new View.OnClickListener() {
@@ -205,20 +122,35 @@ public class InputProfileFragment extends Fragment {
 
                 ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
 
+
+                //초기화
                 ParseAPI.initialize(ParseUser.getCurrentUser(), getActivity(), new Handler(){
                     @Override
                     public void handleMessage(Message msg) {
                         super.handleMessage(msg);
 
-                        //회원 가입 완료
-                        ParseAPI.signUpCompleted(getActivity(), new Handler() {
+
+                        //새 사용자 등록 알림
+                        ParseAPI.informNewUser(getActivity(), new Handler() {
                             @Override
                             public void handleMessage(Message msg) {
                                 super.handleMessage(msg);
-                                //카메라 실행
-                                Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
-                                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(i);
+
+
+                                //이름 설정 및 회원 가입완료 설정
+                                User user= (User) ParseUser.getCurrentUser();
+                                user.setName(inputProfileNameET.getText().toString());
+                                user.setCompleted(true);
+                                user.saveInBackground(new SCSaveCallback(getActivity(), new SCSaveCallback.Callback() {
+                                    @Override
+                                    public void done() {
+                                        //카메라 실행
+                                        Intent i = new Intent(getActivity(), CameraActivity.class); // Your list's Intent
+                                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivity(i);
+                                    }
+                                }));
+
 
                             }
                         });
@@ -238,7 +170,7 @@ public class InputProfileFragment extends Fragment {
                             public void handleMessage(Message msg) {
 
                                 //회원 가입 완료
-                                ParseAPI.signUpCompleted(getActivity(), new Handler() {
+                                ParseAPI.informNewUser(getActivity(), new Handler() {
                                     @Override
                                     public void handleMessage(Message msg) {
                                         super.handleMessage(msg);
@@ -297,7 +229,32 @@ public class InputProfileFragment extends Fragment {
         return root;
     }
 
+//    private void setModifyProfileImg()
+//    {
+//
+//        if(((User)ParseUser.getCurrentUser()).getThumProfileFile()!=null) {
+//            ((User) ParseUser.getCurrentUser()).getThumProfileFile().getDataInBackground(new GetDataCallback() {
+//                @Override
+//                public void done(byte[] bytes, ParseException e) {
+//                    if (e == null) {
+//                        inputProfileImg.setImageBitmap(ImageManipulate.byteArrayToBitmap(bytes));
+//                    } else {
+//                        ParseAPI.erroHandling(getActivity(), null);
+//                    }
+//                }
+//            });
+//        }
+//        else{
+//            inputProfileImg.setImageResource(R.mipmap.profile);
+//        }
+//    }
 
+    @Override
+    public void setProgressLayout(int mode) {
+        ((SignUpActivity)getActivity()).setProgressLayout(mode);
+    }
+
+/*
 
     //프로필 사진 선택
     private void chooseImage(ImageChooserListener imageChooserListener) {
@@ -327,7 +284,6 @@ public class InputProfileFragment extends Fragment {
 //                reinitializeImageChooser();
 //            }       Uri uri= Uri.parse(new File(arItem.get(currentPosition)).toString());
 
-
             Log.d(TAG, "choose image ");
             //사진 편집 실행
             Intent intent=new AviaryIntent.Builder(getActivity())
@@ -348,14 +304,15 @@ public class InputProfileFragment extends Fragment {
         else if(resultCode == getActivity().RESULT_OK
                 &&(requestCode==Constants.REQUEST_AVAIRY))
         {
-            Log.d(TAG, "choose avairyd ");
+            Log.d(TAG, "choose avairy ");
+
             imageChooserManager.submit( ChooserType.REQUEST_PICK_PICTURE , data);
         }
         else {
             inputProfilePgb.setVisibility(View.GONE);
         }
     }
-
+*/
 
 
 

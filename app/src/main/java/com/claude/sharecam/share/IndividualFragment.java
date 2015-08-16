@@ -27,13 +27,13 @@ import android.widget.TextView;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
+import com.claude.sharecam.dialog.MyDialogBuilder;
 import com.claude.sharecam.loader.IndividualLoader;
 //import com.claude.sharecam.loader.ShareIndividualLoader;
-import com.claude.sharecam.parse.Contact;
+import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.view.ImageViewRecyclable;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -128,7 +128,7 @@ public class IndividualFragment extends Fragment{
         if(mode==ADD_NORMAL_MODE)
         {
             actionbarItems=(ActionbarItems)getActivity();
-            Util.setActionbarItems(getActivity(), new View.OnClickListener() {
+            Util.setActionbarItem_1(getActivity(), new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     actionbarItems.clickActionItem1();
@@ -393,17 +393,20 @@ public class IndividualFragment extends Fragment{
         for(int i=0; i<friendItems.size(); i++)
         {
             final int index=i;
-            friendItems.get(index).friendProfileFile.getDataInBackground(new GetDataCallback() {
-                @Override
-                public void done(byte[] bytes, ParseException e) {
-                    if (e == null) {
-                        friendItems.get(index).friendProfileBytes = bytes;
-                        individualAdapter.notifyDataSetChanged();
-                        apAdapter.notifyDataSetChanged();
-                    }
+            if(friendItems.get(index).serializableFriendProfileFile.getParseFile()!=null) {
+                friendItems.get(index).serializableFriendThumProfileFile.getParseFile().getDataInBackground(new GetDataCallback() {
+                    @Override
+                    public void done(byte[] bytes, ParseException e) {
+                        if (e == null) {
+                            friendItems.get(index).friendThumProfileBytes = bytes;
+                            individualAdapter.notifyDataSetChanged();
+                            apAdapter.notifyDataSetChanged();
+                        }
 
-                }
-            });
+                    }
+                });
+            }
+
         }
     }
     public void refreshItems()
@@ -696,15 +699,27 @@ public class IndividualFragment extends Fragment{
 //            if(individualItem.contactProfile !=null) {
 
 
+            childViewHolder.personProfileImg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MyDialogBuilder.showProfileDialog(getActivity(),getFragmentManager(),individualItem);
+                }
+            });
+
             //쉐어캠 친구인 경우
             if (individualItem.MODE == IndividualItem.FRIEND)
             {
                     Log.d(TAG,"before set profie");
-                if(individualItem.friendProfileBytes!=null)
+                if(individualItem.friendThumProfileBytes!=null)
                 {
-                    Bitmap bmp = BitmapFactory.decodeByteArray(individualItem.friendProfileBytes,0,individualItem.friendProfileBytes.length);
+                    Bitmap bmp = BitmapFactory.decodeByteArray(individualItem.friendThumProfileBytes,0,individualItem.friendThumProfileBytes.length);
                     childViewHolder.personProfileImg.setImageBitmap(bmp);
                 }
+                else{
+                    childViewHolder.personProfileImg.setImageResource(R.mipmap.profile);
+                }
+
+
 //                individualItem.friendProfileFile.getDataInBackground(new GetDataCallback() {
 //                    @Override
 //                    public void done(byte[] bytes, ParseException e) {

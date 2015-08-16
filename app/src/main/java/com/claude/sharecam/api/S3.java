@@ -1,8 +1,6 @@
 package com.claude.sharecam.api;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.widget.Toast;
 
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager;
@@ -10,14 +8,9 @@ import com.amazonaws.mobileconnectors.s3.transfermanager.Upload;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.camera.ImageManipulate;
 
 import java.io.File;
-import java.net.CookieHandler;
 import java.util.Calendar;
-
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
 
 /**
  * Created by Claude on 15. 5. 14..

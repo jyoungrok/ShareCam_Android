@@ -1,10 +1,12 @@
 package com.claude.sharecam.share;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Locale;
 
 
 import android.content.Context;
+import android.os.Build;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -16,17 +18,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.claude.sharecam.R;
+import com.claude.sharecam.Util;
+import com.claude.sharecam.orm.DBHelper;
+import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.Individual;
+//import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.view.SlidingTabLayout;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 
 public class ShareActivity extends ActionBarActivity implements IndividualFragment.AddedItems {
 
+    public static final String TAG="ShareActivity";
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -74,37 +81,49 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
 
                 if(addedItems!=null)
                 {
-                    ArrayList<Individual> scItems=new ArrayList<Individual>();
-                    for(int i=0; i<addedItems.size(); i++)
-                    {
+//                    ArrayList<Individual> scItems=new ArrayList<Individual>();
+                    for(int i=0; i<addedItems.size(); i++) {
 
                         //연락처 공유 설정 추가
-                        if(addedItems.get(i).MODE== IndividualItem.CONTACT)
-                        {
-                            IndividualItem tempItem=addedItems.get(i);
-                            Individual individual =new Individual(tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,false);
-                            scItems.add(individual);
-                        }
-                        //쉐어캠 친구 추가
-                        else if(addedItems.get(i).MODE== IndividualItem.FRIEND)
-                        {
-                            IndividualItem tempItem=addedItems.get(i);
-                            Individual individual =new Individual(tempItem.objectId,tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,true);
-                            scItems.add(individual);
+//                        if(addedItems.get(i).MODE== IndividualItem.CONTACT)
+//                        {
+//                            IndividualItem tempItem=addedItems.get(i);
+//                            Individual individual =new Individual(tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,false);
+//                            scItems.add(individual);
+//                        }
+//                        //쉐어캠 친구 추가
+//                        else if(addedItems.get(i).MODE== IndividualItem.FRIEND)
+//                        {
+//                            IndividualItem tempItem=addedItems.get(i);
+//                            Individual individual =new Individual(tempItem.objectId,tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,true);
+//                            scItems.add(individual);
+//                        }
+//                    }
+//
+                        try {
+                            Log.d(TAG, "insert share items");
+                            addedItems.get(i).serializableFriendThumProfileFile=null;
+                            addedItems.get(i).serializableFriendProfileFile=null;
+                            addedItems.get(i).create(context);
+                        } catch (SQLException e) {
+                            Log.e(TAG, "insert share items error exception " + e.getMessage());
+                            e.printStackTrace();
                         }
                     }
-
+//                    for(int i=0; i<addedItems.size(); i++) {
+//
+//                    }
                     //공유 대상 local store에 저장
-                    try {
-                        ParseObject.unpinAll(ParseAPI.LABEL_SHARECONTACT);
-                        ParseObject.pinAll(ParseAPI.LABEL_SHARECONTACT, scItems);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+////                        ParseObject.unpinAll(ParseAPI.LABEL_SHARECONTACT);
+////                        ParseObject.pinAll(ParseAPI.LABEL_SHARECONTACT, scItems);
+//                    } catch (ParseException e) {
+//                        e.printStackTrace();
+//                    }
 
 //                    Util.setSharePersonList(context, scItems);
 //                    Util.setSharePersonList(context, scItems.size(), 0);
-                    Log.d("jyr","contactShare num="+scItems.size());
+                    Log.d("jyr", "contactShare num=" + addedItems.size());
 
 
                     finish();
@@ -130,6 +149,25 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
         slidingTabLayout.setViewPager(mViewPager);
 
     }
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if (Build.VERSION.SDK_INT < 16) { //ye olde method
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        } else { // Jellybean and up, new hotness
+            View decorView = getWindow().getDecorView();
+            // Hide the status bar.
+            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+            decorView.setSystemUiVisibility(uiOptions);
+            // Remember that you should never show the action bar if the
+            // status bar is hidden, so hide that too if necessary.
+//            ActionBar actionBar = getActionBar();
+//            actionBar.hide();
+        }
+    }
+
 
     public void setAddedItems(ArrayList<IndividualItem> addedItems)
     {

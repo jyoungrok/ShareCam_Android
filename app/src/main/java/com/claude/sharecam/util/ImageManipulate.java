@@ -1,4 +1,4 @@
-package com.claude.sharecam.camera;
+package com.claude.sharecam.util;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -37,12 +37,59 @@ import java.util.ArrayList;
  * Created by Claude on 15. 4. 29..
  */
 public class ImageManipulate {
+    public static final String TAG="ImageManipulate";
 //
 //    public static Bitmap byteToBitmap(byte[] bytes)
 //    {
 //        return  BitmapFactory.decodeByteArray(bytes,0,bytes.length);
 //
 //    }
+
+    //가로, 세로 중 긴 부분을 size에 맞추어 이미지 크기 조절
+    public static Bitmap getResizedImageFromPath(String path,int size)
+    {
+        Bitmap resziedBitmap=null;
+        try
+        {
+
+
+
+            FileInputStream fis = new FileInputStream(path);
+            Bitmap bitmap = BitmapFactory.decodeStream(fis);
+
+            //bitmap 이미지가 size보다 큰경우 size에 맞추어 resize
+            if(size<bitmap.getHeight() || size<bitmap.getWidth())
+            {
+                int width=(bitmap.getWidth()>bitmap.getHeight())?size:bitmap.getWidth()*size/bitmap.getHeight();
+                int height=(bitmap.getWidth()>bitmap.getHeight())?bitmap.getHeight()*size/bitmap.getWidth():size;
+
+                resziedBitmap=Bitmap.createScaledBitmap(bitmap, width, height, false);
+
+            }
+
+            else
+            {
+                resziedBitmap=bitmap;
+            }
+
+            ByteArrayOutputStream bytearroutstream = new ByteArrayOutputStream();
+            resziedBitmap.compress(Bitmap.CompressFormat.JPEG, 100,bytearroutstream);
+
+            Log.d(TAG,"origin width="+bitmap.getWidth());
+            Log.d(TAG,"origin height="+bitmap.getHeight());
+            Log.d(TAG,"resized width="+resziedBitmap.getWidth());
+            Log.d(TAG,"resized height="+resziedBitmap.getHeight());
+
+        }
+        catch(Exception ex) {
+            Log.e(TAG,"exception getResizedImageFromPath ");
+
+
+        }
+        return resziedBitmap;
+    }
+
+    //가로, 세로 같은 size
     public static Bitmap getThumbnailFromPath(String path, int size)
     {
         Bitmap imgthumBitmap=null;

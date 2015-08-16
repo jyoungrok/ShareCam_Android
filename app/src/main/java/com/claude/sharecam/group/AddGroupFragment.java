@@ -8,14 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageView;
 
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.share.IndividualFragment;
-import com.claude.sharecam.share.IndividualItem;
-
-import java.util.ArrayList;
 //import com.claude.sharecam.share.PersonListFragment;
 
 public class AddGroupFragment extends Fragment {
@@ -36,19 +32,18 @@ public class AddGroupFragment extends Fragment {
         groupName=(GroupName)getActivity();
 //        addedItems=new ArrayList<IndividualItem>();
 
-        Util.setActionbarItems(getActivity(), new View.OnClickListener() {
+        Util.setActionbarItem_1(getActivity(), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (groupNameEditTxt.getText().length() != 0) {
                     //activity의 variable설정
                     groupName.setGroupName(groupNameEditTxt.getText().toString());
-                    IndividualFragment individualFragment=new IndividualFragment();
-                    Bundle args=new Bundle();
-                    args.putInt(IndividualFragment.MODE,IndividualFragment.ADD_NORMAL_MODE);
+                    IndividualFragment individualFragment = new IndividualFragment();
+                    Bundle args = new Bundle();
+                    args.putInt(IndividualFragment.MODE, IndividualFragment.ADD_NORMAL_MODE);
                     individualFragment.setArguments(args);
                     Util.startFragment(getFragmentManager(), R.id.addGroupLayout, individualFragment, false, null);
-                }
-                else {
+                } else {
                     Util.showToast(getActivity(), R.string.you_should_fill_out);
                 }
             }

@@ -14,7 +14,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.claude.sharecam.R;
-import com.claude.sharecam.camera.ImageManipulate;
+import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.orm.UploadingPicture;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.Picture;

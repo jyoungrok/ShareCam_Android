@@ -39,6 +39,8 @@ repositories {
     }
 }
 dependencies {
+    compile 'com.github.chrisbanes.photoview:library:1.2.4'
+//    compile 'it.sephiroth.android.library.imagezoom:imagezoom:+'
 //    compile 'com.cardiomood.android:android-data-sync:0.3'
 //    compile 'com.github.CodeFalling:RecyclerViewSwipeDismiss:v1.1.1'
     compile 'com.parse.bolts:bolts-android:1.+'

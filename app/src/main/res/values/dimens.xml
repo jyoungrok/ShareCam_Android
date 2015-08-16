@@ -26,4 +26,8 @@
 
     <!-- album -->
     <dimen name="album_grid_space">2dp</dimen>
+
+    <!-- dailog -->
+    <dimen name="dialog_width">160dp</dimen>
+
 </resources>

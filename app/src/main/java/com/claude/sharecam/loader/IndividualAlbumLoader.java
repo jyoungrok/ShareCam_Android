@@ -11,7 +11,7 @@
 //import com.claude.sharecam.parse.Picture;
 //import com.claude.sharecam.parse.ShareIndividual;
 //import com.claude.sharecam.parse.User;
-//import com.claude.sharecam.share.IndividualItem;
+//import com.claude.sharecam.orm.IndividualItem;
 //import com.claude.sharecam.share.IndividualItemList;
 //import com.parse.ParseException;
 //

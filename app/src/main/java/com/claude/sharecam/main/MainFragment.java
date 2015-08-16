@@ -1,19 +1,17 @@
 package com.claude.sharecam.main;
 
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.FragmentTabHost;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.claude.sharecam.R;
+import com.claude.sharecam.config.ConfigFragment;
 import com.claude.sharecam.view.SlidingTabLayout;
 
 import java.util.Locale;
@@ -65,7 +63,7 @@ public class MainFragment extends Fragment {
                 case 2 :
                     return new MyAlbumFragment();
                 case 3:
-                    return new MyAlbumFragment();
+                    return new ConfigFragment();
             }
 
         }

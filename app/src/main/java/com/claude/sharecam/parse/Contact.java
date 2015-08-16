@@ -28,6 +28,7 @@ public class Contact extends ParseObject{
     {
         put("createdBy",user);
     }
+    public void setDeleted(boolean deleted) { put("deleted",deleted);}
 
     public void setPhone(String phone)
     {

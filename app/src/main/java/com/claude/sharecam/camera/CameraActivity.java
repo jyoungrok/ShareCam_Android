@@ -39,12 +39,17 @@ import com.claude.sharecam.R;
 //import com.claude.sharecam.TestActivity;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.main.MainActivity;
+import com.claude.sharecam.orm.DBHelper;
+import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.share.ShareActivity;
-import com.parse.ParseUser;
 
 public class CameraActivity extends ActionBarActivity {
+
+
+    //intent에 shortcut여부 저장
+    public static final String IS_SHORTCUT="isShortCut";
+    public static final String SHORTCUT_LABEl ="shortCutIdentifier";//홈 화면 공유 대상 parse label
 
 
 //    private static boolean takingTimerPicture;
@@ -80,7 +85,7 @@ public class CameraActivity extends ActionBarActivity {
     //사진 여러장 찍기 모드에서 저장한 이미지들의 경로
     private ArrayList<String> arItem;
     private ArrayList<byte[]> contItem;//연속 사진 촬영 시 촬영한 사진 임시 저장
-    private List<Individual> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
+    private List<IndividualItem> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
 
     Context context;
     Activity activity;
@@ -243,6 +248,25 @@ public class CameraActivity extends ActionBarActivity {
         }
     }
 
+    private void setSharePerson()
+    {
+        Intent intent=getIntent();
+        //홈화면 단축키로 들어온 경우
+        if(intent.getBooleanExtra(IS_SHORTCUT,false))
+        {
+            String label=intent.getStringExtra(SHORTCUT_LABEl);
+        }
+        else {
+//            spItems=ParseAPI.getSharePerson_Local(this);
+            try {
+                spItems= DBHelper.getSharePerson(this);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -254,6 +278,7 @@ public class CameraActivity extends ActionBarActivity {
         getSupportActionBar().hide();
         //로그인 확인 해보기
         Util.checkLogin(this);
+        setSharePerson();
 
 
 //        startActivity(new Intent(this, TestActivity.class));
@@ -269,7 +294,7 @@ public class CameraActivity extends ActionBarActivity {
 
 
 
-//        Util.syncData(context);
+//        Util.syncParseData(context);
 
 
 
@@ -285,7 +310,7 @@ public class CameraActivity extends ActionBarActivity {
 
         //쉐어캠 공유 목록 불러옴
 //        spItems=Util.getSharePersonList(this);
-        spItems=ParseAPI.getSharePerson_Local(this);
+
         orientationListener.enable();
 
         if (!CameraFunction.hasCamera(myContext)) {

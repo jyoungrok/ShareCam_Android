@@ -2,8 +2,6 @@ package com.claude.sharecam.signup;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -18,21 +16,15 @@ import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.camera.CameraActivity;
-import com.claude.sharecam.camera.ImageManipulate;
+import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.parse.ParseAPI;
 import com.facebook.Profile;
-import com.kbeanie.imagechooser.api.ChooserType;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseFile;
 import com.parse.ParseUser;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Arrays;
 
 public class SignUpFragment extends Fragment {
@@ -68,7 +60,7 @@ public class SignUpFragment extends Fragment {
 
                 ((SignUpActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
 
-                ParseFacebookUtils.logInWithReadPermissionsInBackground(getActivity(), Arrays.asList("public_profile"), new LogInCallback() {
+                ParseFacebookUtils.logInWithReadPermissionsInBackground(getActivity(), Util.getFacebookPermission(), new LogInCallback() {
                     @Override
                     public void done(ParseUser user, ParseException err) {
                         if (user == null) {

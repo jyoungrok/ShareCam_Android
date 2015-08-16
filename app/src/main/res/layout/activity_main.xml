@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.claude.sharecam.main.MainActivity">
+    tools:context="com.claude.sharecam.main.MainActivity"
+    >
     <include
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
@@ -10,17 +11,35 @@
         />
 
     <FrameLayout
-        android:id="@+id/mainContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <!--<com.claude.sharecam.view.SlidingTabLayout-->
+        <FrameLayout
+
+            android:id="@+id/mainContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <!--<com.claude.sharecam.view.SlidingTabLayout-->
             <!--android:id="@+id/mainSlidingTabs"-->
             <!--android:layout_width="match_parent"-->
             <!--android:layout_height="wrap_content" />-->
-        <!--<android.support.v4.view.ViewPager  android:id="@+id/mainPager"-->
+            <!--<android.support.v4.view.ViewPager  android:id="@+id/mainPager"-->
             <!--android:layout_width="match_parent" android:layout_height="match_parent"-->
             <!--tools:context="com.claude.sharecam.share.ShareActivity" >-->
-        <!--</android.support.v4.view.ViewPager>-->
+            <!--</android.support.v4.view.ViewPager>-->
+        </FrameLayout>
+
+        <LinearLayout
+            android:visibility="gone"
+            android:id="@+id/mainProgressLayout"
+            android:gravity="center_horizontal|center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <ProgressBar
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
     </FrameLayout>
 
 </LinearLayout>

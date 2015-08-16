@@ -1,0 +1,75 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.claude.sharecam.config.AutoSaveFragment">
+
+
+    <!-- 자동 저장 -->
+    <RelativeLayout
+        android:id="@+id/autoSaveSetLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="@string/auto_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/autoSaveSetBtn"
+            android:src="@drawable/on_off_btn"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+
+    <!-- 자동 저장 모드 -->
+    <RelativeLayout
+        android:id="@+id/autoSaveModeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="@string/auto_save_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/autoSaveModeImg"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/autoSaveModeTxt"
+            android:text="@string/only_wifi"
+            android:layout_toLeftOf="@id/autoSaveModeImg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+
+
+    <!-- 자동 저장 기본 설정 -->
+    <RelativeLayout
+        android:id="@+id/basicAutoSaveLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/basic_config"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/basicAutoSaveImg"
+            android:src="@mipmap/ic_action_accept"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/basicAutoSaveTxt"
+            android:text="@string/only_wifi"
+            android:layout_toLeftOf="@id/basicAutoSaveImg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+</LinearLayout>

@@ -1,5 +1,6 @@
 package com.claude.sharecam.signup;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -9,8 +10,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
@@ -18,25 +17,44 @@ import android.widget.ProgressBar;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.signup.InputProfileFragment;
-import com.kbeanie.imagechooser.api.ChooserType;
-import com.parse.LogInCallback;
-import com.parse.ParseException;
-import com.parse.ParseFacebookUtils;
-import com.parse.ParseUser;
+import com.claude.sharecam.dialog.MyDialogBuilder;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 public class SignUpActivity extends ActionBarActivity {
 
     ProgressBar signUpProgressBar;
     FrameLayout signupContainer;
+    Context context;
+    public static final String TAG="SignUpActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+        context=this;
+//        ArrayList<String> strItem=new ArrayList<String>();
+//        strItem.add("dfg");
+//        strItem.add("dfgdfg");
+//
+//        ArrayList<View.OnClickListener> listenerItems=new ArrayList<View.OnClickListener>();
+//        listenerItems.add(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//                Util.showToast(context,R.string.network_unavailable);
+//            }
+//        });
+//        listenerItems.add(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//                Util.showToast(context,R.string.network_unavailable);
+//            }
+//        });
+//        MyDialogBuilder.showListDialog(this,getSupportFragmentManager(), strItem,listenerItems);
 
         // Add code to print out the key hash
         try {
@@ -59,8 +77,9 @@ public class SignUpActivity extends ActionBarActivity {
         signupContainer=(FrameLayout)findViewById(R.id.signupContainer);
 
         getSupportActionBar().hide();;
-        Util.startFragment(getSupportFragmentManager(),R.id.signupContainer,new SignUpFragment(),false,SignUpFragment.TAG);
+//        Util.startFragment(getSupportFragmentManager(),R.id.signupContainer,new SignUpFragment(),false,SignUpFragment.TAG);
 
+        Util.startFragment(getSupportFragmentManager(),R.id.signupContainer,new PhoneVerifyFragment(),false,SignUpFragment.TAG);
     }
 
     @Override
@@ -73,9 +92,9 @@ public class SignUpActivity extends ActionBarActivity {
         }
 
 
-        fragment = getSupportFragmentManager().findFragmentByTag(InputProfileFragment.TAG);
+        fragment = getSupportFragmentManager().findFragmentByTag(InputProfileSelectFragment.TAG);
         if (fragment != null) {
-            ((InputProfileFragment) fragment).onActivityResult(requestCode, resultCode, data);
+            ((InputProfileSelectFragment) fragment).onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -84,6 +103,11 @@ public class SignUpActivity extends ActionBarActivity {
 
         switch(state)
         {
+            case Constants.PROGRESS_AND_LAYOUT_VISIBLE:
+//                Log.d(TAG,"PROGRESS_AND_LAYOUT_VISIBLE");
+                signUpProgressBar.setVisibility(View.VISIBLE);
+                signupContainer.setVisibility(View.VISIBLE);
+                break;
             case Constants.PROGRESS_VISIBLE:
                 signUpProgressBar.setVisibility(View.VISIBLE);
                 signupContainer.setVisibility(View.GONE);

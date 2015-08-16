@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.Image;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,8 +18,7 @@ import android.widget.TextView;
 
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
-import com.claude.sharecam.Util;
-import com.claude.sharecam.camera.ImageManipulate;
+import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.orm.UploadingPicture;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.view.ImageViewRecyclable;

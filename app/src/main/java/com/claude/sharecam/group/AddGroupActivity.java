@@ -1,19 +1,14 @@
 package com.claude.sharecam.group;
 
 import android.content.Context;
-import android.media.Image;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.ImageView;
 
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.share.IndividualFragment;
-import com.claude.sharecam.share.IndividualItem;
+import com.claude.sharecam.orm.IndividualItem;
 import com.parse.ParseException;
 import com.parse.SaveCallback;
 

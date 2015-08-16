@@ -5,14 +5,15 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
 import com.claude.sharecam.Util;
+import com.claude.sharecam.orm.DBHelper;
 import com.claude.sharecam.parse.Friend;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.parse.User;
-import com.claude.sharecam.share.IndividualItem;
+import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.share.IndividualItemList;
 import com.parse.ParseException;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,13 +34,15 @@ public class IndividualLoader  extends AsyncTaskLoader<IndividualItemList> {
     @Override
     public IndividualItemList loadInBackground() {
 
-        Log.d("jyr", "person loader load in background");
+        Log.d(TAG, "person loader load in background");
 
         IndividualItemList individualItemList =new IndividualItemList();
 
+        Log.d(TAG,"find contacts");
         //연락처 데이터 불러옴
         individualItemList.contactItems = Util.getContactList(context);
-
+        Log.d(TAG,"find contacts done ");
+        Log.d(TAG,"find friends data from parse local stroe");
         //쉐어캠 친구 데이터 불러옴
         List<Friend> friendList= null;
         try {
@@ -51,9 +54,18 @@ public class IndividualLoader  extends AsyncTaskLoader<IndividualItemList> {
             e.printStackTrace();
         }
 
-        //추가된 연락처 목록 불러옴
-        List<Individual> individualList =ParseAPI.getSharePerson_Local(context);
+        Log.d(TAG,"find friends data done");
 
+        Log.d(TAG,"find share friends data from parse local stroe");
+        //추가된 연락처 목록 불러옴
+        List<IndividualItem> individualList = null;
+        try {
+            individualList = DBHelper.getSharePerson(context);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        Log.d(TAG,"find share friends done "+individualList.size());
 
         individualItemList.addedItems=new ArrayList<IndividualItem>();
         individualItemList.friendItems=new ArrayList<IndividualItem>();
@@ -68,26 +80,27 @@ public class IndividualLoader  extends AsyncTaskLoader<IndividualItemList> {
 
 
 
-        for(int i=0; i<friendList.size(); i++)
-        {
-            try {
-                Log.d("jyr","profile size="+friendList.get(i).getFriendUser().getParseFile("profile").getData().length);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            User friendUser= (User) friendList.get(i).getFriendUser();
+        if(friendList!=null) {
+            for (int i = 0; i < friendList.size(); i++) {
+//            try {
+//                Log.d("jyr","profile size="+friendList.get(i).getFriendUser().getParseFile("profile").getData().length);
+//            } catch (ParseException e) {
+//                e.printStackTrace();
+//            }
+                User friendUser = (User) friendList.get(i).getFriendUser();
 //            individualItemList.friendItems.add(new IndividualItem(friendUser.getObjectId(),friendUser.getUsername(),friendUser.getProfileFile(),Util.convertToNationalNumber(context, friendUser.getPhone())));
-            individualItemList.friendItems.add(new IndividualItem(friendUser.getObjectId(),friendUser.getUsername(),friendUser.getProfileFile(),Util.convertToNationalNumber(context, friendUser.getPhone())));
+                individualItemList.friendItems.add(new IndividualItem(friendUser.getObjectId(), friendUser.getUsername(), friendUser.getThumProfileFile(), friendUser.getProfileFile(), Util.convertToNationalNumber(context, friendUser.getPhone())));
+            }
         }
 
-
+        Log.d(TAG,"check if contact is sharecam friend");
 
         for(int i=0; i< individualItemList.contactItems.size(); i++)
         {
             //연락처 데이터 들 중 쉐어캠 친구인 것이 있는지 확인
             for(int j=0; j< individualItemList.friendItems.size(); j++) {
                 //연락처 중 쉐어캠 친구인 경우
-                if(individualItemList.friendItems.get(j).phoneNumber.equals(individualItemList.contactItems.get(i).phoneNumber)) {
+                if(individualItemList.friendItems.get(j).phoneNumber!=null && individualItemList.friendItems.get(j).phoneNumber.equals(individualItemList.contactItems.get(i).phoneNumber)) {
 
                     //제거
                     individualItemList.contactItems.remove(i);
@@ -104,7 +117,7 @@ public class IndividualLoader  extends AsyncTaskLoader<IndividualItemList> {
                 //이미 추가된 연락처가 있는지 확인하고 있는 경우 addedItems에 추가
                 for (int j = 0; j < individualList.size(); j++) {
                     //연락처
-                    if (!individualList.get(j).getIsFriend() && individualItemList.contactItems.get(i).MODE == IndividualItem.CONTACT && individualItemList.contactItems.get(i).phoneNumber.equals(individualList.get(j).getNationalPhone())) {
+                    if (individualList.get(j).MODE==IndividualItem.CONTACT && individualItemList.contactItems.get(i).MODE == IndividualItem.CONTACT && individualItemList.contactItems.get(i).phoneNumber.equals(individualList.get(j).phoneNumber)) {
                         individualItemList.contactItems.get(i).added = true;
                         individualItemList.addedItems.add(individualItemList.contactItems.get(i));
                         break;
@@ -113,22 +126,24 @@ public class IndividualLoader  extends AsyncTaskLoader<IndividualItemList> {
             }
         }
 
+        Log.d(TAG,"check if contact is sharecam friend done");
 
 
 
-        if(withShareUser) {
-            for (int i = 0; i < individualItemList.friendItems.size(); i++) {
-                //이미 추가된 쉐어캠 친구가 있는지 있는지 확인
-                for (int j = 0; j < individualList.size(); j++) {
-                    //쉐어캠 친구
-                    if (individualList.get(j).getIsFriend() && individualItemList.friendItems.get(i).MODE == IndividualItem.FRIEND && individualItemList.friendItems.get(i).objectId.equals(individualList.get(j).getFriendObjectId())) {
-                        individualItemList.friendItems.get(i).added = true;
-                        individualItemList.addedItems.add(individualItemList.friendItems.get(i));
-                    }
-                }
 
-            }
-        }
+//        if(withShareUser) {
+//            for (int i = 0; i < individualItemList.friendItems.size(); i++) {
+//                //이미 추가된 쉐어캠 친구가 있는지 있는지 확인
+//                for (int j = 0; j < individualList.size(); j++) {
+//                    //쉐어캠 친구
+//                    if (individualList.get(j).getIsFriend() && individualItemList.friendItems.get(i).MODE == IndividualItem.FRIEND && individualItemList.friendItems.get(i).objectId.equals(individualList.get(j).getFriendObjectId())) {
+//                        individualItemList.friendItems.get(i).added = true;
+//                        individualItemList.addedItems.add(individualItemList.friendItems.get(i));
+//                    }
+//                }
+//
+//            }
+//        }
 
 
 

@@ -12,6 +12,7 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +31,7 @@ public class DBHelper extends OrmLiteSqliteOpenHelper{
      * The data access object used to interact with the Sqlite database to do C.R.U.D operations.
      */
     private Dao<UploadingPicture, Long> uploadingPictureDao;
+    private Dao<IndividualItem, Long> individualItemDao;
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource) {
@@ -39,6 +41,7 @@ public class DBHelper extends OrmLiteSqliteOpenHelper{
              * creates the Table
              */
             TableUtils.createTable(connectionSource, UploadingPicture.class);
+            TableUtils.createTable(connectionSource,IndividualItem.class);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -72,8 +75,22 @@ public class DBHelper extends OrmLiteSqliteOpenHelper{
         return uploadingPictureDao;
     }
 
+    public Dao<IndividualItem, Long> getIndividualItemDao() throws SQLException {
+        if(individualItemDao == null) {
+            individualItemDao = getDao(IndividualItem.class);
+        }
+        return individualItemDao;
+    }
+
+
+    //공유 설정 대상 불러오기
+    public static List<IndividualItem> getSharePerson(Context context) throws SQLException {
+
+        return ((Util)context.getApplicationContext()).dbHelper.getIndividualItemDao().queryBuilder().where().eq("isShortCut",false).query();
+    }
 
 //
+
 //    //state가 finished인 uploading picture응 제외하고 모두 불러옴
 //    public List<UploadingPicture> getUP_without_finished(Context context)
 //    {

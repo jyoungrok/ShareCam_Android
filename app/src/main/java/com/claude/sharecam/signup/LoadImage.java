@@ -5,13 +5,6 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.claude.sharecam.R;
-import com.claude.sharecam.Util;
-import com.claude.sharecam.camera.ImageManipulate;
-import com.facebook.Profile;
-import com.parse.ParseFile;
-import com.parse.ParseUser;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;

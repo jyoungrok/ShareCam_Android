@@ -5,8 +5,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
 import com.claude.sharecam.Util;
-import com.claude.sharecam.share.IndividualItem;
-import com.claude.sharecam.share.IndividualItemList;
+import com.claude.sharecam.orm.IndividualItem;
 
 import java.util.ArrayList;
 

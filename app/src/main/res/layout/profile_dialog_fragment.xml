@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:gravity="center"
+        android:orientation="vertical"
+        android:layout_width="@dimen/dialog_width"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:src="@mipmap/profile"
+            android:id="@+id/dialogProfileImg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/dialogUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/dialogInviteLayout"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_width="0px"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/dialogInviteBtn"
+                    android:src="@mipmap/ic_action_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:text="@string/invite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/dialogAddToHomeLayout"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_width="0px"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/dialogAddToHomeBtn"
+                    android:src="@mipmap/ic_action_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:text="@string/add_to_home"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

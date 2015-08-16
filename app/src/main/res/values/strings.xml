@@ -4,17 +4,29 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
+    <!-- invite -->
+    <string name="sms_invite_msg">쉐어캠 초대 메세지</string>
+
     <!-- dialog -->
-    <string name="phone_verify_message_sent">인증번호가 전송 되었습니다. 확인 후 입력해 주세요</string>
+    <string name="add_indiviudal_camera_shortcut">공유 카메라 홈 화면에 추가</string>
+    <string name="add_individual_album_shortcut">공유 앨범 홈 화면에 추가</string>
+    <string name="take_picture">사진 촬영</string>
+    <string name="load_from_album">사진 앨범에서 선택</string>
+    <string name="basic_picture">기본 사진</string>
+    <string name="phone_verify_message_sent">인증번호가 전송 되었습니다. 확인 후 입력해 주세요 (5분간 유호합니다.)</string>
     <string name="accept">확인</string>
     <string name="cancel">취소</string>
+    <string name="invite">초대하기</string>
+    <string name="add_to_home">홈 화면에 추가</string>
 
     <!-- toast server error -->
+    <string name="invalid_session_token">다른 기기에서 접속하였거나 문제가 발생하였습니다. 앱 삭제 후 재설치해 주세요</string>
     <string name="network_unavailable">네트워크 상태를 확인해 주세요.</string>
     <string name="verification_number_not_matched">입력하신 인증번호가 옳지 않습니다.</string>
     <string name="unknown_error_code">네트워크 연결 상태를 확인해 주세요</string>
     <string name="invalid_phone">전화번호가 옳지 않습니다.</string>
     <string name="phone_already_exist">전화번호로 가입한 회원이 이미 존재합니다.</string>
+    <string name="continuous_attempts_not_allowed">이미 요청하였습니다. 1분 후에 다시 시도해 주세요</string>
     <!--<string name="facebook_invalid_access_token">페이스북 로그인에 실패하였습니다.</string>-->
 
     <!-- toast-->
@@ -77,5 +89,38 @@
     <string name="finished_uploading_state">업로드 완료</string>
     <string name="title_activity_add_group">AddGroupActivity</string>
 
+    <!-- ConfigFragment -->
+    <string name="basic_config">기본 설정</string>
+    <string name="individual_info">개인 정보</string>
+    <string name="alarm_config">알림 설정</string>
+    <string name="auto_save">자동 저장</string>
+    <string name="auto_save_config">자동 저장 설정</string>
+    <string name="auto_save_mode">자동 저장 모드</string>
+    <string name="config_account">계정 설정</string>
+    <string name="registered">등록됨</string>
+    <string name="not_registered">등록 안됨</string>
+    <string name="facebook">페이스북</string>
+    <string name="connected_devices">접속중인 기기</string>
+    <string name="manage_friend">친구 관리</string>
+    <string name="sync_friend">친구 동기화</string>
+    <string name="final_sync_time">최종 동기화 시간</string>
+    <string name="alarm">알림</string>
+    <string name="alarm_mode">알림 모드</string>
+    <string name="sound_and_vibration">소리와 진동</string>
+    <string name="sound">소리</string>
+    <string name="vibration">진동</string>
+    <string name="only_wifi">Wifi에서만</string>
+    <string name="whenever">항상</string>
+    <string name="individual_and_group">개인, 그룹</string>
+    <string name="individual">개인</string>
+    <string name="group">그룹</string>
+    <string name="notice">공지사항</string>
+    <string name="app_info">앱 정보</string>
+    <string name="sign_out">회원 탈퇴</string>
+
+
+    <!--dialog -->
+    <string name="sign_out_dialog_text">회원 탈퇴시 공유 사진, 그룹 목록 등 모두 삭제됩니다.</string>
+    <string name="title_activity_image_view">ImageViewActivity</string>
 
 </resources>

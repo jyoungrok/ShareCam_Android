@@ -6,10 +6,10 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
+import com.claude.sharecam.util.ImageManipulate;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -104,7 +104,7 @@ public class CameraFunction {
             //write the file
             FileOutputStream fos = new FileOutputStream(pictureFile);
 
-            byte[] file =ImageManipulate.getImage_byte(activity, cameraSetting.ratio, data, R.mipmap.logo, ImageManipulate.getRotate(orientation, cameraSetting.cameraFront));
+            byte[] file = ImageManipulate.getImage_byte(activity, cameraSetting.ratio, data, R.mipmap.logo, ImageManipulate.getRotate(orientation, cameraSetting.cameraFront));
             //이미지에 로고 추가한 후 저장
             fos.write(file);
             fos.close();

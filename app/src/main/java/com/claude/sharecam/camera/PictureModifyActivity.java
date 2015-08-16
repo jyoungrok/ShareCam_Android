@@ -20,12 +20,15 @@ import com.aviary.android.feather.sdk.AviaryIntent;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
+import com.claude.sharecam.orm.DBHelper;
+import com.claude.sharecam.orm.IndividualItem;
+import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.view.ResizableImageView;
 import com.parse.ParseUser;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +59,7 @@ public class PictureModifyActivity extends ActionBarActivity {
 
     Context context;
 
-    List<Individual> spItems;//공유 개인 목록
+    List<IndividualItem> spItems;//공유 개인 목록
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +75,11 @@ public class PictureModifyActivity extends ActionBarActivity {
     private void initialize()
     {
 
-        spItems=ParseAPI.getSharePerson_Local(this);
+        try {
+            spItems= DBHelper.getSharePerson(this);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 //        spItems=Util.getSharePersonList(this);
         context=this;
 //        pictureImg=(ImageView)findViewById(R.id.pictureImg);

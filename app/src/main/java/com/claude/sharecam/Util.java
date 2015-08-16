@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -26,9 +27,11 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
+import com.aviary.android.feather.sdk.AviaryIntent;
 import com.aviary.android.feather.sdk.IAviaryClientCredentials;
 import com.claude.sharecam.api.ApiManager;
 //import com.claude.sharecam.login.LoginActivity;
+import com.claude.sharecam.dialog.MyDialogBuilder;
 import com.claude.sharecam.orm.DBHelper;
 import com.claude.sharecam.orm.UploadingPicture;
 import com.claude.sharecam.parse.Contact;
@@ -36,13 +39,13 @@ import com.claude.sharecam.parse.Friend;
 import com.claude.sharecam.parse.Group;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.Picture;
-import com.claude.sharecam.parse.Individual;
+//import com.claude.sharecam.parse.Individual;
 import com.claude.sharecam.parse.ShareFriend;
 //import com.claude.sharecam.parse.UploadingPicture;
 import com.claude.sharecam.parse.Test;
 import com.claude.sharecam.parse.User;
 import com.claude.sharecam.response.Federation;
-import com.claude.sharecam.share.IndividualItem;
+import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.signup.SignUpActivity;
 import com.claude.sharecam.util.ShareIndividualGson;
 import com.google.gson.Gson;
@@ -53,12 +56,10 @@ import com.google.i18n.phonenumbers.Phonenumber;
 
 
 import com.j256.ormlite.android.apptools.OpenHelperManager;
-import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseObject;
 import com.parse.ParsePush;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -70,6 +71,7 @@ import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -115,6 +117,7 @@ public class Util extends Application implements IAviaryClientCredentials {
         context = this;
 //        s3=new S3();
 
+        Log.d(TAG,"Util start");
 //        aws=new AWS();
         //db
         dbHelper = OpenHelperManager.getHelper(this, DBHelper.class);
@@ -129,7 +132,7 @@ public class Util extends Application implements IAviaryClientCredentials {
         ParseObject.registerSubclass(Contact.class);
         ParseObject.registerSubclass(Friend.class);
         ParseObject.registerSubclass(User.class);
-        ParseObject.registerSubclass(Individual.class);
+//        ParseObject.registerSubclass(Individual.class);
         ParseObject.registerSubclass(ShareFriend.class);
         ParseObject.registerSubclass(Picture.class);
         ParseObject.registerSubclass(Group.class);
@@ -149,6 +152,10 @@ public class Util extends Application implements IAviaryClientCredentials {
             }
 
         });
+        ParseUser.enableRevocableSessionInBackground();
+        //자동으로 Anonymous user 생성
+//        ParseUser.enableAutomaticUser();
+//        ParseUser.getCurrentUser().saveInBackground();
 
 
         syncData(context);
@@ -157,6 +164,7 @@ public class Util extends Application implements IAviaryClientCredentials {
         /**
          * Test Code
          */
+
 
 
 //        ParseQuery<User> query=ParseQuery.getQuery(User.class);
@@ -236,7 +244,6 @@ public class Util extends Application implements IAviaryClientCredentials {
 //        });
 
 
-
 //        initUploadingData();
 
     }
@@ -247,9 +254,10 @@ public class Util extends Application implements IAviaryClientCredentials {
      */
     public static void syncData(final Context context)
     {
-        if(ParseUser.getCurrentUser()!=null) {
+//        if(((Util)context.getApplicationContext()).pref.getBoolean(Constants.PREF_USER_LOGIN,Constants.PREF_USER_LOGIN_DEFAULT)) {
 
-            Log.d(TAG,"syncData");
+        if(ParseUser.getCurrentUser()!=null && ((User)ParseUser.getCurrentUser()).getCompleted()) {
+            Log.d(TAG,"syncParseData Util");
             final Handler handler = new Handler() {
                 @Override
                 public void handleMessage(Message msg) {
@@ -262,13 +270,13 @@ public class Util extends Application implements IAviaryClientCredentials {
                 public void run() {
 
                     try {
-                        Calendar friendCal=Calendar.getInstance();
-                        friendCal.setTime(ParseAPI.getFriendLastUpdatedAt(context));
+//                        Calendar friendCal=Calendar.getInstance();
+//                        friendCal.setTime(ParseAPI.getFriendLastUpdatedAt(context));
                         //최소 동기화 시간이 지난 경우 동기화 시도
-                        if(Calendar.getInstance().getTimeInMillis()-friendCal.getTimeInMillis()>Constants.SYNC_FRIEND_GAP) {
+                        if(Calendar.getInstance().getTimeInMillis()-ParseAPI.getFriendSyncTime(context)>Constants.SYNC_FRIEND_GAP) {
 
                             //친구 목록 동기화
-                            ParseAPI.syncData(context, Friend.CLASS_NAME);
+                            ParseAPI.syncParseData(context, Friend.CLASS_NAME);
                         }
                         else {
                             Log.d(TAG,"not sync friendList ");
@@ -279,7 +287,7 @@ public class Util extends Application implements IAviaryClientCredentials {
                         //최소 동기화 시간이 지난 경우 동기화 시도
                         if(Calendar.getInstance().getTimeInMillis()-contactCal.getTimeInMillis()>Constants.SYNC_CONTACT_GAP) {
                             //연락처 동기화
-                            ParseAPI.syncContact(context, true);
+                            ParseAPI.syncContact(context);
                         }
                         else {
                             Log.d(TAG,"not sync contactList");
@@ -428,13 +436,13 @@ public class Util extends Application implements IAviaryClientCredentials {
                 .putString(Constants.PREF_FEDERATION_EXPIRATION, federation.Credentials.Expiration)
                 .commit();
     }
-
-    public static void logout(Context context) {
-        SharedPreferences.Editor editor = ((Util) context.getApplicationContext()).editor;
-
-        editor.putBoolean(Constants.PREF_LOGIN, false)
-                .commit();
-    }
+//
+//    public static void logout(Context context) {
+//        SharedPreferences.Editor editor = ((Util) context.getApplicationContext()).editor;
+//
+//        editor.putBoolean(Constants.PREF_LOGIN, false)
+//                .commit();
+//    }
 
     /**
      * Util
@@ -452,9 +460,9 @@ public class Util extends Application implements IAviaryClientCredentials {
     public static void startFragment(FragmentManager fm, int layout, Fragment fragment, boolean addBackStack, String TAG) {
 
         if (addBackStack)
-            fm.beginTransaction().replace(layout, fragment, TAG).addToBackStack(null).commit();
+            fm.beginTransaction().replace(layout, fragment, TAG).addToBackStack(null).commitAllowingStateLoss();
         else
-            fm.beginTransaction().replace(layout, fragment, TAG).commit();
+            fm.beginTransaction().replace(layout, fragment, TAG).commitAllowingStateLoss();
     }
 
     public static String getDrawableUriString(Context context, int id) {
@@ -612,26 +620,26 @@ public class Util extends Application implements IAviaryClientCredentials {
     }
 
     //preference에 공유 하고자 하는 개인(연락처 + 쉐어캠 친구) 추가
-    public static void setSharePersonList(Context context, ArrayList<Individual> personItems) {
-        Gson gson = new Gson();
-        Log.d("jyr", gson.toJson(personItems));
-        SharedPreferences.Editor editor = ((Util) context.getApplicationContext()).editor;
+//    public static void setSharePersonList(Context context, ArrayList<Individual> personItems) {
+//        Gson gson = new Gson();
+//        Log.d("jyr", gson.toJson(personItems));
+//        SharedPreferences.Editor editor = ((Util) context.getApplicationContext()).editor;
+//
+//        ArrayList<ShareIndividualGson> gsonItems = new ArrayList<ShareIndividualGson>();
+//        for (int i = 0; i < personItems.size(); i++) {
+//            gsonItems.add(new ShareIndividualGson("dfg", "dfg", "dfg", "dfg", false));
+//        }
+//        editor.putString(Constants.PREF_SHARE_PERSON, gson.toJson(gsonItems));
+//        editor.commit();
+//    }
 
-        ArrayList<ShareIndividualGson> gsonItems = new ArrayList<ShareIndividualGson>();
-        for (int i = 0; i < personItems.size(); i++) {
-            gsonItems.add(new ShareIndividualGson("dfg", "dfg", "dfg", "dfg", false));
-        }
-        editor.putString(Constants.PREF_SHARE_PERSON, gson.toJson(gsonItems));
-        editor.commit();
-    }
-
-    //preference에서 공유 개인(연락처 + 쉐어캠 친구) 불러옴
-    public static ArrayList<Individual> getSharePersonList(Context context) {
-        Type resultType = new TypeToken<List<ShareIndividualGson>>() {
-        }.getType();
-        Gson gson = new Gson();
-        return gson.fromJson(((Util) context.getApplicationContext()).pref.getString(Constants.PREF_SHARE_PERSON, Constants.PREF_SHARE_PERSON_DEFAULT), resultType);
-    }
+//    //preference에서 공유 개인(연락처 + 쉐어캠 친구) 불러옴
+//    public static ArrayList<Individual> getSharePersonList(Context context) {
+//        Type resultType = new TypeToken<List<ShareIndividualGson>>() {
+//        }.getType();
+//        Gson gson = new Gson();
+//        return gson.fromJson(((Util) context.getApplicationContext()).pref.getString(Constants.PREF_SHARE_PERSON, Constants.PREF_SHARE_PERSON_DEFAULT), resultType);
+//    }
 
     public static String getAlbumDateFormat(Date date) {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
@@ -653,7 +661,7 @@ public class Util extends Application implements IAviaryClientCredentials {
         });
     }
 
-    public static void setActionbarItems(final Activity actionBarActivity, View.OnClickListener item1Listener) {
+    public static void setActionbarItem_1(final Activity actionBarActivity, View.OnClickListener item1Listener) {
         actionBarActivity.findViewById(R.id.actionItem1).setOnClickListener(item1Listener);
     }
 
@@ -677,6 +685,35 @@ public class Util extends Application implements IAviaryClientCredentials {
         Log.d("jyr","invalid phone number");
         return false;
     }
+
+//    //International Phone number 로 변경
+//    public static String getNationalPhoneNumber(Context context,String phoeNumber)
+//    {
+//        TelephonyManager mTelephonyMgr = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+//        PhoneNumberUtil phoneUtil=PhoneNumberUtil.getInstance();
+//        try {
+//
+//            Phonenumber.PhoneNumber phoneNumber = phoneUtil.parse(phoeNumber,mTelephonyMgr.getNetworkCountryIso().toUpperCase());
+////                        Log.d("jyr", PhoneNumberUtils.formatNumber("01033119561"));
+////                        PhoneNumberUtils.formatNumberToE164()
+//            if(phoneUtil.isValidNumber(phoneNumber))
+//            {
+//                Log.d("jyr","+"+phoneNumber.getCountryCode()+phoneNumber.getNationalNumber());
+//                Log.d("jyr","valid number = "+phoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.E164));
+//                return phoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.E164);
+//            }
+//            else{
+//                Log.d("jyr","invalid");
+//            }
+////                        phoneNumberTxt.setText(phoneUtil.format(phoneNumber, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL));
+//        } catch (NumberParseException e) {
+//            Log.d("jyr","phone covert error");
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//
+//    }
 
     //International Phone number 로 변경
     public static String getE164PhoneNumber(Context context,String phoeNumber)
@@ -707,6 +744,12 @@ public class Util extends Application implements IAviaryClientCredentials {
 
     }
 
+
+    /**
+     * preferences
+     *
+     */
+    // /sync_all_contact로 연락처 기반 친구 동기화 후 설정
     //연락처 동기화 완료 시간 설정
     public static void setContactSyncTime(Context context)
     {
@@ -721,6 +764,55 @@ public class Util extends Application implements IAviaryClientCredentials {
         return new Date(syncTime);
     }
 
+    public static boolean getAlarmSet(Context context)
+    {
+        return  ((Util)context.getApplicationContext()).pref.getBoolean(Constants.PREF_ALARM,Constants.PREF_ALARM_DEFAULT);
+    }
+
+    public static void setAlarmSet(Context context, boolean alarm)
+    {
+        ((Util)context.getApplicationContext()).editor.putBoolean(Constants.PREF_ALARM,alarm).commit();
+    }
+
+    public static int getAlarmMode(Context context)
+    {
+        return ((Util)context.getApplicationContext()).pref.getInt(Constants.PREF_ALARM_MODE, Constants.PREF_ALARM_MODE_DEFAULT);
+    }
+
+    public static void setAlarmMode(Context context,int mode)
+    {
+        ((Util)context.getApplicationContext()).editor.putInt(Constants.PREF_ALARM_MODE, mode).commit();
+    }
+
+    public static void setAutoSaveSet(Context context,boolean autoSave)
+    {
+        ((Util)context.getApplicationContext()).editor.putBoolean(Constants.PREF_AUTO_SAVE, autoSave).commit();
+    }
+
+    public static boolean getAutoSaveSet(Context context)
+    {
+        return ((Util)context.getApplicationContext()).pref.getBoolean(Constants.PREF_AUTO_SAVE,Constants.PREF_AUTO_SAVE_DEFAULT);
+    }
+
+    public static void setAutoSaveMode(Context context,int mode)
+    {
+        ((Util)context.getApplicationContext()).editor.putInt(Constants.PREF_AUTO_SAVE_MODE, mode).commit();
+    }
+
+    public static int getAutoSaveMode(Context context)
+    {
+        return ((Util)context.getApplicationContext()).pref.getInt(Constants.PREF_AUTO_SAVE_MODE,Constants.PREF_AUTO_SAVE_MODE_DEFAULT);
+    }
+
+    public static void setAutoSaveBasicConfig(Context context, int basicConfig)
+    {
+        ((Util)context.getApplicationContext()).editor.putInt(Constants.PREF_AUTO_SAVE_BASIC_CONFIG, basicConfig).commit();
+    }
+
+    public static int getAutoSaveBasicConfig(Context context)
+    {
+        return ((Util)context.getApplicationContext()).pref.getInt(Constants.PREF_AUTO_SAVE_BASIC_CONFIG,Constants.PREF_AUTO_SAVE_BASIC_CONFIG_DEFAULT);
+    }
 
 
     public static void logCurrentThread(String TAG)
@@ -739,5 +831,87 @@ public class Util extends Application implements IAviaryClientCredentials {
         SimpleDateFormat sdf=new SimpleDateFormat("MM/dd/yyyy KK:mm:ss a Z");
         sdf.setTimeZone( TimeZone.getTimeZone("UTC") );
         return sdf.format(date).toString();
+    }
+
+    public static void startAvairy(Activity activity,Intent data)
+    {
+        Log.d(TAG, "choose image ");
+        //사진 편집 실행
+        Intent intent=new AviaryIntent.Builder(activity)
+                .setData(data.getData())
+                .withOutput(data.getData())
+                .withOutputFormat(Bitmap.CompressFormat.JPEG)
+                .saveWithNoChanges(true)
+                .withPreviewSize(5000)
+                .withNoExitConfirmation(false)//저장 안하고 뒤로 가기 눌렀을 경우 Dialog 띄움
+                .withOutputQuality(90)
+                .build();
+
+        activity.startActivityForResult(intent, Constants.REQUEST_AVAIRY);
+
+    }
+
+    public static List<String> getFacebookPermission()
+    {
+        return Arrays.asList("public_profile");
+    }
+
+    public static String getDateStr(long time)
+    {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd HH:mm");
+        String strDate = sdf.format(time);
+
+        return strDate;
+    }
+
+    public static void addIndividualShortcut(final Context context,FragmentManager fm, final IndividualItem scItem){
+
+        ArrayList<String> strItmes=new ArrayList<String>();
+        strItmes.add(context.getString(R.string.add_indiviudal_camera_shortcut));
+        strItmes.add(context.getString(R.string.add_individual_album_shortcut));
+
+        ArrayList<View.OnClickListener> listenrList=new ArrayList<View.OnClickListener>();
+        //카메라 홈화면 추가
+        listenrList.add(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                /**
+                 * shortcut을 위한 label을 만들고 해당 label에 individualItem (공유대상)을 pin한다.
+                 */
+                final String label=String.valueOf(new Date().getTime());
+//                scItem.pinInBackground(label,new SCSaveCallback(context, new SCSaveCallback.Callback() {
+//                    @Override
+//                    public void done() {
+//                        Intent shortcutIntent = new Intent( context, CameraActivity.class );
+//                        shortcutIntent.setAction( Intent.ACTION_MAIN );
+//                        shortcutIntent.putExtra(CameraActivity.IS_SHORTCUT,true);
+//                        shortcutIntent.putExtra(CameraActivity.SHORTCUT_LABEl,label);
+//
+//                        Intent shortcutAddIntent = new Intent();
+//                        shortcutAddIntent.putExtra( Intent.EXTRA_SHORTCUT_NAME, scItem.personName );
+//                        shortcutAddIntent.putExtra( Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
+//                                Intent.ShortcutIconResource.fromContext( context, R.mipmap.ic_action_accept ) );
+//                        shortcutAddIntent.putExtra( Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent );
+//                        shortcutAddIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+//                        context.sendBroadcast( shortcutAddIntent );
+//                    }
+//                }));
+
+
+
+            }
+        });
+        //앨범 홈화면 추가
+        listenrList.add(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        MyDialogBuilder.showListDialog(context,fm, strItmes,listenrList);
+        Log.d(TAG,"addShortCut");
+
     }
 }
