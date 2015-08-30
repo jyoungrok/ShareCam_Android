@@ -8,7 +8,7 @@
 | type | int | 0 - 보낸 사진 앨범 / 1 - 받은 사진 앨범범 |
 | receiverPhoneList | JSONArray<String> | 보낸 사진 앨범에서 공유 연락처 목록 |
 | receiverPhoneListSize | int | receiverPhoneList의 size |
-| lastUpdatedAt | long | 마지막으로 해당 앨범에 사진을 전송 혹은 수신한 시간 ( new Date().getTime()) | 
+| lastUpdatedAt | Date | 해당 앨범 마지막 사진의 updatedAt | 
 | picture | Picture | 대문 사진(마지막 사진) | 
 | isNew | boolean | 안 읽은 사진이 있는 경우 - true | 
 
