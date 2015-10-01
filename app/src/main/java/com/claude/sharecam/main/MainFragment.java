@@ -57,13 +57,14 @@ public class MainFragment extends Fragment {
             {
                 default:
                 case 0:
-                    return new MyAlbumFragment();
-                case 1 :
-                    return new MyAlbumFragment();
-                case 2 :
-                    return new MyAlbumFragment();
+                case 1:
+                case 2:
                 case 3:
-                    return new ConfigFragment();
+                    Bundle args=new Bundle();
+                    args.putInt(AlbumFragment.ALBUM_TYPE,AlbumFragment.RECEIVE_ALBUM_TYPE_VALUE);
+                    AlbumFragment albumFragment=new AlbumFragment();
+                    albumFragment.setArguments(args);
+                    return albumFragment;
             }
 
         }

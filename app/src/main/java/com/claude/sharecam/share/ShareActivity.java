@@ -1,7 +1,7 @@
 package com.claude.sharecam.share;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -22,16 +22,17 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.claude.sharecam.R;
-import com.claude.sharecam.Util;
-import com.claude.sharecam.orm.DBHelper;
-import com.claude.sharecam.orm.IndividualItem;
-import com.claude.sharecam.parse.ParseAPI;
 //import com.claude.sharecam.parse.Individual;
+import com.claude.sharecam.Util;
+import com.claude.sharecam.parse.Contact;
+import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.view.SlidingTabLayout;
 import com.parse.ParseException;
-import com.parse.ParseObject;
 
-public class ShareActivity extends ActionBarActivity implements IndividualFragment.AddedItems {
+import org.json.JSONArray;
+import org.json.JSONException;
+
+public class ShareActivity extends ActionBarActivity {
 
     public static final String TAG="ShareActivity";
     /**
@@ -52,9 +53,9 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
     ViewPager mViewPager;
     Context context;
 
-    ArrayList<IndividualItem> addedItems;//추가된 개인, 쉐어캠 친구
-    public ArrayList<IndividualItem> contactItems;
-    public ArrayList<IndividualItem> friendItems;
+//    ArrayList<Contact> addedItems;//추가된 개인, 쉐어캠 친구
+//    public ArrayList<IndividualItem> contactItems;
+//    public ArrayList<IndividualItem> friendItems;
 //    ArrayList<PersonItem> addedItems;
 
     @Override
@@ -65,7 +66,7 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
         //init actionbar
         getSupportActionBar().hide();
         context=this;
-        addedItems=new ArrayList<IndividualItem>();
+//        addedItems=new ArrayList<Contact>();
 
         ((ImageView)findViewById(R.id.backBtn)).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,10 +80,25 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
             @Override
             public void onClick(View v) {
 
-                if(addedItems!=null)
+                if(Util.contactItemList.addedItems!=null)
                 {
+                    Log.d(TAG,"set share individual");
+//                    try {
+//                        ParseAPI.pinShareContact(addedItems);
+//                    } catch (ParseException e) {
+//                        e.printStackTrace();
+//                    }
+
+                    //공유 대상 설정
+                    try {
+                        Util.setShareIndividual(context,Util.contactItemList.addedItems);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    finish();
 //                    ArrayList<Individual> scItems=new ArrayList<Individual>();
-                    for(int i=0; i<addedItems.size(); i++) {
+//                    for(int i=0; i<addedItems.size(); i++) {
 
                         //연락처 공유 설정 추가
 //                        if(addedItems.get(i).MODE== IndividualItem.CONTACT)
@@ -98,17 +114,17 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
 //                            Individual individual =new Individual(tempItem.objectId,tempItem.personName, tempItem.phoneNumber,tempItem.contactProfile,true);
 //                            scItems.add(individual);
 //                        }
-//                    }
-//
-                        try {
-                            Log.d(TAG, "insert share items");
-                            addedItems.get(i).serializableFriendThumProfileFile=null;
-                            addedItems.get(i).serializableFriendProfileFile=null;
-                            addedItems.get(i).create(context);
-                        } catch (SQLException e) {
-                            Log.e(TAG, "insert share items error exception " + e.getMessage());
-                            e.printStackTrace();
-                        }
+////                    }
+////
+//                        try {
+//                            Log.d(TAG, "insert share items");
+////                            addedItems.get(i).serializableFriendThumProfileFile=null;
+////                            addedItems.get(i).serializableFriendProfileFile=null;
+////                            addedItems.get(i).create(context);
+//                        } catch (SQLException e) {
+//                            Log.e(TAG, "insert share items error exception " + e.getMessage());
+//                            e.printStackTrace();
+//                        }
                     }
 //                    for(int i=0; i<addedItems.size(); i++) {
 //
@@ -123,13 +139,13 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
 
 //                    Util.setSharePersonList(context, scItems);
 //                    Util.setSharePersonList(context, scItems.size(), 0);
-                    Log.d("jyr", "contactShare num=" + addedItems.size());
-
-
-                    finish();
-                }
-                else
-                    finish();
+//                    Log.d("jyr", "contactShare num=" + addedItems.size());
+//
+//
+//                    finish();
+//                }
+//                else
+//                    finish();
             }
         });
 
@@ -168,38 +184,73 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
         }
     }
 
+//
+//    public void setAddedItems(ArrayList<IndividualItem> addedItems)
+//    {
+//        this.addedItems.clear();
+//        Log.d("jyr","setAddedItem"+addedItems.size());
+//        for(int i=0; i<addedItems.size(); i++)
+//        {
+//            this.addedItems.add(addedItems.get(i));
+//        }
+//
+//    }
 
-    public void setAddedItems(ArrayList<IndividualItem> addedItems)
-    {
-        this.addedItems.clear();
-        Log.d("jyr","setAddedItem"+addedItems.size());
-        for(int i=0; i<addedItems.size(); i++)
-        {
-            this.addedItems.add(addedItems.get(i));
-        }
+//    @Override
+//    public void setAddedItems(List<Contact> addedItems) {
+//        Util.contactItemList.addedItems.clear();
+//        Log.d("jyr","setAddedItem"+addedItems.size());
+//        for(int i=0; i<addedItems.size(); i++)
+//        {
+//            Util.contactItemList.addedItems.add(addedItems.get(i));
+//        }
+//    }
 
-    }
+//    @Override
+//    public ArrayList<Contact> getAddedItems() {
+//        return (ArrayList<Contact>) Util.contactItemList.addedItems;
+//    }
+//
+//    @Override
+//    public boolean isAdded(Contact individualItem) {
+//        for(int i=0; i<Util.contactItemList.addedItems.size(); i++)
+//        {
+//            if(Util.contactItemList.addedItems.get(i).getRecordId()==individualItem.getRecordId())
+//            {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+//
+//    @Override
+//    public void addItem(Contact individualItem) {
+//
+//        Util.contactItemList.addedItems.add(individualItem);
+//    }
+//
+//    @Override
+//    public void removeItem(Contact individualItem) {
+//        Util.contactItemList.addedItems.remove(individualItem);
+//    }
 
-    @Override
-    public ArrayList<IndividualItem> getAddedItems() {
-        return addedItems;
-    }
 
-    @Override
-    public void addItem(IndividualItem individualItem) {
-        addedItems.add(individualItem);
-    }
-
-    @Override
-    public void removeItem(IndividualItem individualItem) {
-        addedItems.remove(individualItem);
-    }
+//
+//    @Override
+//    public void addItem(Contact individualItem) {
+//        addedItems.add(individualItem);
+//    }
+//
+//    @Override
+//    public void removeItem(Contact individualItem) {
+//        addedItems.remove(individualItem);
+//    }
 /*
     //각 adapter에 필요한 데이터 불러옴
     private void init()
     {
         //연락처 데이터 불러옴
-        personItems = Util.getContactList(this);
+        personItems = Util.getContactList2(this);
 
         //쉐어캠 친구 데이터 불러옴
         List<Friend> friendList= ParseAPI.getFriends_Local(this);
@@ -279,14 +330,17 @@ public class ShareActivity extends ActionBarActivity implements IndividualFragme
             switch (position)
             {
                 default:
+                case 1 :
                 case 0:
-                    IndividualFragment individualFragment=new IndividualFragment();
+                    IndividualFragment individualFragment =new IndividualFragment();
                     Bundle args=new Bundle();
-                    args.putInt(IndividualFragment.MODE,IndividualFragment.ADD_SHARE_USER_MODE);
+                    args.putInt(IndividualFragment.MODE, IndividualFragment.ADD_SHARE_USER_MODE);
                     individualFragment.setArguments(args);
                     return individualFragment;
-                case 1 :
-                    return new GroupFragment();
+
+
+//                    return new IndividualFragment();
+//                    return new IndividualFragment();
             }
 
         }

@@ -11,28 +11,33 @@ import java.util.List;
 public class PictureListWithDate{
 
 
-    public static final int SORT_BY_PICTURE=0;
-    public static final int SORT_BY_DATE=1;
 
-    List<Picture> pictureList;//sort by picture 에서 사용
+    int sortType;//현재 pref에 설정되어있는 sort 방식
+
+
+    ArrayList<Picture> pictureList;//sort by PICTURE 에서 사용
     ArrayList<PictureItem> pictureWithDateList;//sort by date에서 사용
 
     int dateNum;
-    int type;
     public PictureListWithDate(){
         dateNum=0;
     }
-    public PictureListWithDate(List<Picture> pictureList,int type)
+    public PictureListWithDate(List<Picture> pictureList,int sortType)
     {
+        this.sortType=sortType;
         dateNum=0;
         setArItem(pictureList);
-        this.type=type;
     }
 
     //최신 날짜 부터 dscending으로 pictureList가 정렬되어 있다고 가정
     public void setArItem(List<Picture> pictureList)
     {
-        this.pictureList=pictureList;
+        this.pictureList=new ArrayList<Picture>();
+        for(int i=0; i<pictureList.size(); i++)
+        {
+            this.pictureList.add(pictureList.get(i));
+        }
+//        this.pictureList=pictureList;
         pictureWithDateList =new ArrayList<PictureItem>();
 
         String lastDate=null;

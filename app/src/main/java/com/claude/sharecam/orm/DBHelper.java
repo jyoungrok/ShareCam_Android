@@ -4,15 +4,14 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.claude.sharecam.Util;
-import com.claude.sharecam.parse.*;
+import com.claude.sharecam.parse.Contact;
+import com.claude.sharecam.share.IndividualItem;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,6 +31,7 @@ public class DBHelper extends OrmLiteSqliteOpenHelper{
      */
     private Dao<UploadingPicture, Long> uploadingPictureDao;
     private Dao<IndividualItem, Long> individualItemDao;
+    private Dao<Contact,Long> contactDao;
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase, ConnectionSource connectionSource) {
@@ -80,6 +80,13 @@ public class DBHelper extends OrmLiteSqliteOpenHelper{
             individualItemDao = getDao(IndividualItem.class);
         }
         return individualItemDao;
+    }
+
+    public Dao<Contact, Long> getContactDao() throws SQLException {
+        if(contactDao == null) {
+            contactDao = getDao(Contact.class);
+        }
+        return contactDao;
     }
 
 

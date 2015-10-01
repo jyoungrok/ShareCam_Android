@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
+import com.claude.sharecam.share.ShareItem;
 import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.orm.UploadingPicture;
 import com.claude.sharecam.parse.ParseAPI;
@@ -124,6 +125,12 @@ public class UploadActivity extends ActionBarActivity {
 //    };
 
     public static final int SERVICE_REQUEST_CODE=1;
+
+    //ex) 3개의 연락처, 2개의 그룹에 전송
+    private String getUploadShareText(ShareItem shareItem)
+    {
+        return (shareItem.sharePhoneList.size())+getString(R.string.share_contact_num_transfer);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -288,17 +295,37 @@ public class UploadActivity extends ActionBarActivity {
             {
                 case BEFORE_UPLOADING_PARENT_TYPE:
                     ((ParentViewHolder)holder).upParentText.setText(getString(R.string.uploading));
+                    ((ParentViewHolder)holder).upParentRightText.setVisibility(View.GONE);
                     break;
                 case AFTER_UPLOADING_PARENT_TYPE:
+                    ((ParentViewHolder)holder).upParentRightText.setVisibility(View.VISIBLE);
                     ((ParentViewHolder)holder).upParentText.setText(getString(R.string.success_uploading));
+                    ((ParentViewHolder)holder).upParentRightText.setText(getString(R.string.delete_all_success_upload));
+                    //모든 전송 완료 삭제
+                    ((ParentViewHolder)holder).upParentRightText.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Log.d(TAG,"delete all success upload ");
+                            int size=UploadService.instance.afterItems.size();
+                            for (int i = 0; i <size; i++)
+                            {
+                                UploadService.instance.deleteItem(UploadService.instance.afterItems.get(0));
+                            }
+                            uploadingAdapter.notifyDataSetChanged();
+                        }
+                    });
+
                     break;
                 //업로딩
                 case BEFORE_UPLOADING_CHILD_TYPE:
                     ((ChildViewHolder)holder).upChildImageVIew.setImageBitmap(ImageManipulate.getThumbnailFromPath(beforeItems.get(getBeforeItemsPosition(position)).getFilePath(), Constants.THUMB_NAIL_SIZE));
                     ((ChildViewHolder)holder).upStateText.setText(beforeItems.get(getBeforeItemsPosition(position)).getStateName(context));
+                    ((ChildViewHolder)holder).upShareText.setText(getUploadShareText(beforeItems.get(getBeforeItemsPosition(position)).getShareItem()));
                     if(beforeItems.get(getBeforeItemsPosition(position)).getState()==UploadingPicture.FAILED_UPLOADING_STATE)
                     {
                         ((ChildViewHolder)holder).reUploadBtn.setVisibility(View.VISIBLE);
+
+                        //업로드 실패 시 재 업로드 시도
                         ((ChildViewHolder)holder).reUploadBtn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -314,7 +341,7 @@ public class UploadActivity extends ActionBarActivity {
                 case AFTER_UPLOADING_CHILD_TYPE:
                     ((ChildViewHolder)holder).upChildImageVIew.setImageBitmap(ImageManipulate.getThumbnailFromPath(afterItems.get(getAfterItemPosition(position)).getFilePath(), Constants.THUMB_NAIL_SIZE));
                     ((ChildViewHolder)holder).upStateText.setText(afterItems.get(getAfterItemPosition(position)).getStateName(context));
-
+                    ((ChildViewHolder)holder).upShareText.setText(getUploadShareText(afterItems.get(getAfterItemPosition(position)).getShareItem()));
                     break;
             }
         }
@@ -368,10 +395,11 @@ public class UploadActivity extends ActionBarActivity {
 
         class ParentViewHolder extends RecyclerView.ViewHolder {
             TextView upParentText;
-
+            TextView upParentRightText;
             public ParentViewHolder(View itemView) {
                 super(itemView);
                 upParentText= (TextView) itemView.findViewById(R.id.upParentText);
+                upParentRightText=(TextView)itemView.findViewById(R.id.upParentRightText);
             }
         }
         class ChildViewHolder extends RecyclerView.ViewHolder {
@@ -379,11 +407,13 @@ public class UploadActivity extends ActionBarActivity {
             ImageView reUploadBtn;
             ImageViewRecyclable upChildImageVIew;
             TextView upStateText;
+            TextView upShareText;
 
             public ChildViewHolder(View itemView) {
                 super(itemView);
 
 
+                upShareText=(TextView)itemView.findViewById(R.id.upShareText);
                 reUploadBtn=(ImageView)itemView.findViewById(R.id.reUploadBtn);
                 upChildImageVIew=(ImageViewRecyclable)itemView.findViewById(R.id.upChildImageVIew);
                 upStateText=(TextView)itemView.findViewById(R.id.upStateText);

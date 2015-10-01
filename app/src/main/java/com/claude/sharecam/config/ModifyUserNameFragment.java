@@ -11,9 +11,10 @@ import android.widget.ImageView;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.main.MainActivity;
+import com.claude.sharecam.main.AlbumActivity;
 import com.claude.sharecam.parse.SCSaveCallback;
 import com.claude.sharecam.parse.User;
+import com.claude.sharecam.util.ActionBarUtil;
 import com.parse.ParseUser;
 
 public class ModifyUserNameFragment extends Fragment {
@@ -44,22 +45,21 @@ public class ModifyUserNameFragment extends Fragment {
             }
         });
 
-        Util.setActionbarItem_1(getActivity(), new View.OnClickListener() {
+        ActionBarUtil.setActionbarItem_1(getActivity(), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(modifyUserNameET.getText().toString().length()==0)
-                {
-                    Util.showToast(getActivity(),R.string.you_should_fill_out);
+                if (modifyUserNameET.getText().toString().length() == 0) {
+                    Util.showToast(getActivity(), R.string.you_should_fill_out);
                     return;
                 }
-                User user= (User) ParseUser.getCurrentUser();
+                User user = (User) ParseUser.getCurrentUser();
                 user.setName(modifyUserNameET.getText().toString());
 
-                ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
+                ((AlbumActivity) getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
                 user.saveInBackground(new SCSaveCallback(getActivity(), new SCSaveCallback.Callback() {
                     @Override
                     public void done() {
-                        ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                        ((AlbumActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                         getFragmentManager().popBackStack();
                     }
                 }));

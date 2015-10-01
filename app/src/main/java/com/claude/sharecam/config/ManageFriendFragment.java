@@ -1,7 +1,5 @@
 package com.claude.sharecam.config;
 
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -19,12 +17,9 @@ import android.widget.TextView;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.main.MainActivity;
-import com.claude.sharecam.parse.Friend;
+import com.claude.sharecam.main.AlbumActivity;
 import com.claude.sharecam.parse.ParseAPI;
 import com.parse.ParseException;
-
-import java.util.Date;
 
 public class ManageFriendFragment extends Fragment {
 
@@ -43,7 +38,7 @@ public class ManageFriendFragment extends Fragment {
 
             if(thisFragment.isAdded()) {
                 setSyncDate();
-                ((MainActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                ((AlbumActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                 isSynchronizing = false;
             }
         }
@@ -82,19 +77,21 @@ public class ManageFriendFragment extends Fragment {
                 if(!isSynchronizing) {
                     Log.d(TAG,"try sync");
                     isSynchronizing=true;
-                    ((MainActivity) getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
+                    ((AlbumActivity) getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
 
                     new Thread() {
                         @Override
                         public void run() {
                             try {
-                                ParseAPI.syncParseData(getActivity(), Friend.CLASS_NAME);
+//                                ParseAPI.syncParseData(getActivity(), Friend.CLASS_NAME);
                                 //수정된  local 연락처 정보 반영
-                                ParseAPI.syncContact(getActivity());
+
+                                ParseAPI.syncContact(getActivity(),syncHandler);
                             } catch (ParseException e) {
+                                Log.e(ParseAPI.TAG,e.getMessage()+e.getCode());
                                 e.printStackTrace();
                             }
-                            syncHandler.sendEmptyMessage(0);
+//                            syncHandler.sendEmptyMessage(0);
                         }
                     }.start();
                 }
@@ -110,7 +107,7 @@ public class ManageFriendFragment extends Fragment {
     {
 
             //마지막 동기화 시간
-            syncDateText.setText(getString(R.string.final_sync_time) + " " + Util.getDateStr(Util.getContactSyncTime(getActivity()).getTime()));
+            syncDateText.setText(getString(R.string.final_sync_time) + " " + Util.getDateStr(Util.getContactSyncTime(getActivity())));
 
     }
 

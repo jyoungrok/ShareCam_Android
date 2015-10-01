@@ -19,7 +19,7 @@ import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.api.ErrorCode;
 import com.claude.sharecam.dialog.MyDialogBuilder;
-import com.claude.sharecam.main.MainActivity;
+import com.claude.sharecam.main.AlbumActivity;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.User;
 import com.claude.sharecam.util.Country;
@@ -158,7 +158,7 @@ public class ModifyPhoneFragment extends Fragment {
                 }
 
 
-                ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
+                ((AlbumActivity)getActivity()).setProgressLayout(Constants.PROGRESS_VISIBLE);
 
                 HashMap<String, Object> params = new HashMap<String, Object>();
                 params.put("vNumber", mpPhoneVerifyNumTxt.getText().toString());
@@ -171,7 +171,7 @@ public class ModifyPhoneFragment extends Fragment {
                             ((User) ParseUser.getCurrentUser()).fetchInBackground(new GetCallback<ParseObject>() {
                                 @Override
                                 public void done(ParseObject parseObject, ParseException e) {
-                                    ((MainActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                                    ((AlbumActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                                     if (e == null) {
 
 //                                        ((User) ParseUser.getCurrentUser()).setPhone(((User) parseObject).getPhone());
@@ -190,7 +190,7 @@ public class ModifyPhoneFragment extends Fragment {
 //                            Util.startFragment(getFragmentManager(),R.id.signupContainer,new InputProfileFragment(),false,InputProfileFragment.TAG);
                         }
                         else {
-                            ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                            ((AlbumActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                             Util.showToast(getActivity(), ErrorCode.getToastMessageId(e));
                         }
                     }

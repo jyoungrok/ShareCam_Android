@@ -21,11 +21,14 @@ import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.orm.DBHelper;
-import com.claude.sharecam.orm.IndividualItem;
+import com.claude.sharecam.share.IndividualItem;
+import com.claude.sharecam.share.ShareItem;
 import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.view.ResizableImageView;
 import com.parse.ParseUser;
+
+import org.json.JSONException;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -59,7 +62,8 @@ public class PictureModifyActivity extends ActionBarActivity {
 
     Context context;
 
-    List<IndividualItem> spItems;//공유 개인 목록
+//    List<IndividualItem> spItems;//공유 개인 목록
+    ShareItem shareItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,13 +79,21 @@ public class PictureModifyActivity extends ActionBarActivity {
     private void initialize()
     {
 
-        try {
-            spItems= DBHelper.getSharePerson(this);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+
+//        try {
+//            spItems= DBHelper.getSharePerson(this);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
 //        spItems=Util.getSharePersonList(this);
         context=this;
+
+        try {
+            shareItem=Util.getShareList(this);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 //        pictureImg=(ImageView)findViewById(R.id.pictureImg);
         pictureViewPager=(ViewPager)findViewById(R.id.pictureViewPager);
         viewPagerIndicator=(TextView)findViewById(R.id.viewPagerIndicator);
@@ -252,7 +264,7 @@ public class PictureModifyActivity extends ActionBarActivity {
         public void onClick(View v) {
 
 
-            ParseAPI.uploadPicture(context, spItems, arItem, ParseUser.getCurrentUser());
+            ParseAPI.uploadPicture(context, shareItem, arItem, ParseUser.getCurrentUser());
             finish();
         }
     };

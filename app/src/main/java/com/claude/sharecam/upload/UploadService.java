@@ -11,20 +11,23 @@ import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 
+import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
+import com.claude.sharecam.share.ShareItem;
 import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.orm.UploadingPicture;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.Picture;
-import com.claude.sharecam.parse.ShareItem;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseQuery;
-import com.parse.ParseUser;
 import com.parse.SaveCallback;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +47,13 @@ public class UploadService extends IntentService {
             numFailed=0;
             numSuccess=0;
             numUploading=0;
+            numStandby=0;
+
         }
-        int numUploading;//업로드 혹은 대기 중의 수
+        int numUploading;//업로드 중 수
         int numFailed;//업로드 실패 개수
         int numSuccess;//업로드 성공 개수
+        int numStandby;//업로드 대기 중 수
 
         public void updateNumber(int state)
         {
@@ -57,6 +63,8 @@ public class UploadService extends IntentService {
                     numFailed++;
                     break;
                 case UploadingPicture.STANDBY_UPLOADING_STATE:
+                    numStandby++;
+                    break;
                 case UploadingPicture.UPLOADING_STATE:
                     numUploading++;
                     break;
@@ -65,30 +73,62 @@ public class UploadService extends IntentService {
                     break;
             }
 
-            Log.i(TAG,"update number uploading="+numUploading+" failed="+numFailed+" success="+numSuccess);
+            Log.i(TAG,"update number standby="+numStandby+" uploading="+numUploading+" failed="+numFailed+" success="+numSuccess);
         }
 
+        //state update 에 따른 각 state 개수 변경
         public void updateNumber(int prevState,int curState)
         {
-            //업로드 -> 실패
-            if((prevState==UploadingPicture.STANDBY_UPLOADING_STATE || prevState==UploadingPicture.UPLOADING_STATE) && curState==UploadingPicture.FAILED_UPLOADING_STATE)
+            switch(prevState)
             {
-                numUploading--;
-                numFailed++;
-            }
-            //업로드 -> 업로드 성공
-            else if((prevState==UploadingPicture.STANDBY_UPLOADING_STATE || prevState==UploadingPicture.UPLOADING_STATE) && curState==UploadingPicture.SUCCESS_UPLOADING_STATE)
-            {
-                numUploading--;
-                numSuccess++;
-            }
-            else if(prevState==UploadingPicture.FAILED_UPLOADING_STATE && (curState==UploadingPicture.UPLOADING_STATE || curState==UploadingPicture.STANDBY_UPLOADING_STATE))
-            {
-                numUploading++;
-                numFailed--;
+                case UploadingPicture.FAILED_UPLOADING_STATE:
+                    numFailed--;
+                    break;
+                case UploadingPicture.STANDBY_UPLOADING_STATE:
+                    numStandby--;
+                    break;
+                case UploadingPicture.UPLOADING_STATE:
+                    numUploading--;
+                    break;
+                case UploadingPicture.SUCCESS_UPLOADING_STATE:
+                    numSuccess--;
+                    break;
             }
 
-            Log.i(TAG,"update number uploading="+numUploading+" failed="+numFailed+" success="+numSuccess);
+            switch(curState)
+            {
+                case UploadingPicture.FAILED_UPLOADING_STATE:
+                    numFailed++;
+                    break;
+                case UploadingPicture.STANDBY_UPLOADING_STATE:
+                    numStandby++;
+                    break;
+                case UploadingPicture.UPLOADING_STATE:
+                    numUploading++;
+                    break;
+                case UploadingPicture.SUCCESS_UPLOADING_STATE:
+                    numSuccess++;
+                    break;
+            }
+//            //업로드 -> 실패
+//            if((prevState==UploadingPicture.STANDBY_UPLOADING_STATE || prevState==UploadingPicture.UPLOADING_STATE) && curState==UploadingPicture.FAILED_UPLOADING_STATE)
+//            {
+//                numUploading--;
+//                numFailed++;
+//            }
+//            //업로드 -> 업로드 성공
+//            else if((prevState==UploadingPicture.STANDBY_UPLOADING_STATE || prevState==UploadingPicture.UPLOADING_STATE) && curState==UploadingPicture.SUCCESS_UPLOADING_STATE)
+//            {
+//                numUploading--;
+//                numSuccess++;
+//            }
+//            else if(prevState==UploadingPicture.FAILED_UPLOADING_STATE && (curState==UploadingPicture.UPLOADING_STATE || curState==UploadingPicture.STANDBY_UPLOADING_STATE))
+//            {
+//                numUploading++;
+//                numFailed--;
+//            }
+
+            Log.i(TAG,"update number standby="+numStandby+" uploading="+numUploading+" failed="+numFailed+" success="+numSuccess);
         }
 
         public void deleteNumber(int state)
@@ -99,6 +139,8 @@ public class UploadService extends IntentService {
                     numFailed--;
                     break;
                 case UploadingPicture.STANDBY_UPLOADING_STATE:
+                    numStandby--;
+                    break;
                 case UploadingPicture.UPLOADING_STATE:
                     numUploading--;
                     break;
@@ -107,7 +149,7 @@ public class UploadService extends IntentService {
                     break;
             }
 
-            Log.i(TAG,"delete number uploading="+numUploading+" failed="+numFailed+" success="+numSuccess);
+            Log.i(TAG,"delete number standby="+numStandby+" uploading="+numUploading+" failed="+numFailed+" success="+numSuccess);
         }
     }
     UploadNumber uploadNumber;
@@ -124,12 +166,13 @@ public class UploadService extends IntentService {
 
 
     public static final String MULTIPLE_UPLOAD_ACTION="com.claude.service.upload.action";//여러장 업로드 요청
+    public static final String FINISH_SERVICE_ACTION="com.claude.service.upload.finish";
     public static final String UPLOAD_ACTION="com.claude.service.upload.action";  //업로드 요청
     public static final String RE_UPLOAD_ACTION="com.claude.service.reupload.action";//실패한 업로드 재 요청 시도
 
     //intent extra data
     public static final String PICTURE_LIST="pictureList";
-    public static final String PICTURE="picture";
+    public static final String PICTURE="PICTURE";
     public static final String FILE_PATH="filePath";
     public static final String UPLOADING_PICTURE="uploadingPicture";
 //    public static final String FILE_PATH="filePath";
@@ -146,7 +189,7 @@ public class UploadService extends IntentService {
     public static final String broadcastPercentAction="com.claude.sharecam.service.percent";
 
     private IntentFilter intentFilter;
-    final int UPLOAD_NOTIFICATION_ID=101;
+//    final int UPLOAD_NOTIFICATION_ID=101;
 
     Context context;
 
@@ -159,13 +202,12 @@ public class UploadService extends IntentService {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-//            Intent dataChangedBroadIntent=new Intent();
-//            dataChangedBroadIntent.setAction(UploadActivity.broadcastUploadDataChanged);
-//            context.sendBroadcast(dataChangedBroadIntent);
+
+
+
         }
     };
 
-//
 //    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 //        @Override
 //        public void onReceive(Context context, Intent intent) {
@@ -279,6 +321,9 @@ public class UploadService extends IntentService {
 //
 //        return instance;
 //    }
+
+
+
     //DB에서 데이터 불러와 설정
     private void initItems()
     {
@@ -321,10 +366,16 @@ public class UploadService extends IntentService {
         int id=uploadingPicture.getId();
         Log.d(TAG,"create item state = "+uploadingPicture.getStateName(context)+"   id = "+id);
 
-        UploadingPicture newBeforeItem=new UploadingPicture();
-        newBeforeItem.setFilePath(filePath);
-        newBeforeItem.setState(state);
-        newBeforeItem.setId(id);
+        UploadingPicture newBeforeItem;
+        try {
+            newBeforeItem=uploadingPicture.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            newBeforeItem=new UploadingPicture();
+        }
+//        newBeforeItem.setFilePath(filePath);
+//        newBeforeItem.setState(state);
+//        newBeforeItem.setId(id);
 
         beforeItems.add(0,newBeforeItem);
         uploadNumber.updateNumber(state);
@@ -340,9 +391,11 @@ public class UploadService extends IntentService {
         Log.d(TAG,"updateItem");
         int state = uploadingPicture.getState();
         int id=uploadingPicture.getId();
-        String pictureId=uploadingPicture.getPictureId();
+//        String pictureId=uploadingPicture.getPictureId();
         Log.d(TAG,"update item state = "+uploadingPicture.getStateName(context)+"   id = "+id);
 
+        //아이템 업데이트
+        //state 갯수 업데이트
         switch(state)
         {
             default:
@@ -355,8 +408,14 @@ public class UploadService extends IntentService {
                     if(beforeItems.get(i).getId()==id)
                     {
                         uploadNumber.updateNumber(beforeItems.get(i).getState(),state);
-                        beforeItems.get(i).setState(state);
-                        beforeItems.get(i).setPictureId(pictureId);
+                        try {
+                            beforeItems.add(i,uploadingPicture.clone());
+                        } catch (CloneNotSupportedException e) {
+                            e.printStackTrace();
+                        }
+                        beforeItems.remove(i+1);
+//                        beforeItems.get(i).setState(state);
+//                        beforeItems.get(i).setPictureId(pictureId);
                         break;
                     }
                 }
@@ -369,9 +428,13 @@ public class UploadService extends IntentService {
                     if(beforeItems.get(i).getId()==id)
                     {
                         uploadNumber.updateNumber(beforeItems.get(i).getState(),state);
-                        beforeItems.get(i).setState(state);
-                        beforeItems.get(i).setPictureId(pictureId);
-                        afterItems.add(0,beforeItems.get(i));
+//                        beforeItems.get(i).setState(state);
+//                        beforeItems.get(i).setPictureId(pictureId);
+                        try {
+                            afterItems.add(0,uploadingPicture.clone());
+                        } catch (CloneNotSupportedException e) {
+                            e.printStackTrace();
+                        }
                         beforeItems.remove(i);
                         break;
                     }
@@ -429,15 +492,31 @@ public class UploadService extends IntentService {
             registerReceiver(broadcastReceiver, intentFilter);
         }
 
-        startForeground(UPLOAD_NOTIFICATION_ID, getUploadNotification());
+        startForeground(Constants.UPLOAD_NOTIFICATION_ID, getUploadNotification());
 
+        if(intent==null)
 
-        if(UPLOAD_ACTION.equals(intent.getAction()))
         {
-            final Picture picture= itemToPicture((ShareItem)intent.getSerializableExtra(PICTURE));
+            Log.e(TAG,"intent is null");
+            return START_STICKY;
+        }
+        //notificiation에서 service종료 버튼 누른 경우
+        if(FINISH_SERVICE_ACTION.equals(intent.getAction()))
+        {
+            Log.d(TAG, "finish upload service");
+            this.stopSelf();
+//            if(Up)
+        }
+        else if(UPLOAD_ACTION.equals(intent.getAction()))
+        {
+            ShareItem shareItem = (ShareItem)intent.getSerializableExtra(PICTURE);
+            final Picture picture= new Picture();
+            picture.init();
+            picture.itemToPicture(shareItem);
+//                    itemToPicture((ShareItem) intent.getSerializableExtra(PICTURE));
             final String filePath=intent.getStringExtra(FILE_PATH);
-//            Log.d(TAG,"upload friend length="+picture.getFriendList().length());
-            uploadPicture(picture,filePath);
+//            Log.d(TAG,"upload friend length="+PICTURE.getFriendList().length());
+            uploadPicture(picture, shareItem,filePath);
 
         }
 
@@ -458,22 +537,24 @@ public class UploadService extends IntentService {
     }
 
     //PictrueItem obejct -> Picture object
-    private Picture itemToPicture(ShareItem shareItem)
-    {
-        Picture picture=new Picture();
-        picture.setCreatedBy(ParseUser.getCurrentUser());
-        picture.init();
-        for(int i=0; i< shareItem.friendList.size(); i++)
-        {
-            picture.setFriendId(shareItem.friendList.get(i));
-        }
-        for(int i=0; i< shareItem.phoneList.size(); i++)
-        {
-            picture.setPhone(shareItem.phoneList.get(i));
-        }
-
-        return picture;
-    }
+//    private Picture itemToPicture(ShareItem shareItem)
+//    {
+//        Picture PICTURE=new Picture();
+//        PICTURE.setCreatedBy(ParseUser.getCurrentUser());
+//        PICTURE.init();
+//        for(int i=0; i< shareItem.shareUserList.size(); i++)
+//        {
+//            PICTURE.setUserId(shareItem.shareUserList.get(i));
+//        }
+//
+//        for(int i=0; i< shareItem.sharePhoneList.size(); i++)
+//        {
+//            Log.d(TAG,"add sharephone "+shareItem.sharePhoneList.get(i));
+//            PICTURE.setPhone(shareItem.sharePhoneList.get(i));
+//        }
+//
+//        return PICTURE;
+//    }
     //사진 파일 재전송 시도
     private void reUploadPicture(final UploadingPicture uploadingPicture)
     {
@@ -499,25 +580,28 @@ public class UploadService extends IntentService {
 
 
     //사진 전송 시도
-    private void uploadPicture(final Picture picture, final String filePath)
+    private void uploadPicture(final Picture picture, ShareItem shareItem,final String filePath)
     {
-        Log.d(TAG,"upload picture start");
+        Log.d(TAG,"upload PICTURE start");
 
-//        Log.d(TAG,"upload friend length="+picture.getFriendList().length());
+//        Log.d(TAG,"upload friend length="+PICTURE.getFriendList().length());
 
         final UploadingPicture uploadingPicture=new UploadingPicture(filePath);
+        uploadingPicture.setShareItem(shareItem);
         //업로드 object local에 저장 및 update item
 //            uploadingPicture.create(this);
         uploadingPicture.createAndSendBR(this);
 //            Log.d(TAG,"uploadPicture Id = "+uploadingPicture.getId());
         createItem(filePath, uploadingPicture);
+
+
         //object만 업로드(without 파일) (네트워크 연결 된 경우)
         picture.saveEventually(new SaveCallback() {
 
             @Override
             public void done(ParseException e) {
                 if(e==null) {
-                    Log.d(TAG, "has uploaded picture object");
+                    Log.d(TAG, "has uploaded PICTURE object");
                    uploadPictureFile(picture,uploadingPicture);
                 }
                 else
@@ -529,7 +613,7 @@ public class UploadService extends IntentService {
     }
 
     //object업로드 완료 후 사진 파일 업로드
-    private void uploadPictureFile(Picture picture, final UploadingPicture uploadingPicture)
+    private void uploadPictureFile(final Picture picture, final UploadingPicture uploadingPicture)
     {
 
         //전송중 local 저장
@@ -547,16 +631,24 @@ public class UploadService extends IntentService {
             public void done(ParseException e) {
 
                 if(e==null) {
-                    Log.d(TAG, "has uploaded the file of picture");
+                    Log.d(TAG, "has uploaded the file of PICTURE");
                     //전송완료 local 저장
                     uploadingPicture.updateStateAndSendBR(context, UploadingPicture.SUCCESS_UPLOADING_STATE);
                     updateItem(uploadingPicture);
 //                            //전송 완료 broadcast
 //                            uploadingPicture.sendStateBroadCast(context);
                     Log.d(TAG, "image upload success");
+
+                    //사진 업로드 -> 업로드 관련 앨범 로컬에 생성
+                    try {
+                        picture.handleSend(context);
+                    } catch (JSONException e1) {
+                        e1.printStackTrace();
+                    }
                 }
                 else
                 {
+                    Log.e(TAG,"uploadPictureFile error");
                    handleFailedUploading(uploadingPicture,e);
                 }
             }
@@ -586,6 +678,7 @@ public class UploadService extends IntentService {
                 .setContentTitle("uplaoding title")
                 .setTicker("uploading pictures")
                 .setWhen(System.currentTimeMillis());
+
         Intent startIntent = new Intent(getApplicationContext(),
                 UploadActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(
@@ -593,7 +686,7 @@ public class UploadService extends IntentService {
         builder.setContentIntent(contentIntent);
         builder.setContent(remoteViews);
         notification = builder.build();
-//        notification.contentView=remoteViews;
+
 
         return notification;
     }
@@ -601,12 +694,58 @@ public class UploadService extends IntentService {
     //notification의 숫자들 갱신
     private void updateNotification()
     {
-       remoteViews.setTextViewText(R.id.uploadingNumText,String.valueOf(uploadNumber.numUploading));
-        remoteViews.setTextViewText(R.id.successNumText,String.valueOf(uploadNumber.numSuccess));
-        remoteViews.setTextViewText(R.id.failNumText,String.valueOf(uploadNumber.numFailed));
+        Intent finishIntent = new Intent(context, UploadService.class);
+        finishIntent.setAction(FINISH_SERVICE_ACTION);
+        PendingIntent pendingIntent=PendingIntent.getService(context,0,finishIntent,0);
+
+        remoteViews.setOnClickPendingIntent(R.id.finishUploadNotiBtn,pendingIntent);
+        // 사진 업로드 중인 경우
+        if(uploadNumber.numUploading>0) {
+
+            remoteViews.setViewVisibility(R.id.uploadFailImg, View.GONE);
+            remoteViews.setViewVisibility(R.id.uploadProgressBar,View.VISIBLE);
+            remoteViews.setTextViewText(R.id.uploadNumText,String.valueOf(uploadNumber.numUploading));
+            remoteViews.setTextViewText(R.id.uploadStateText,getString(R.string.notification_uploading_state));
+        }
+
+        //전송실패한 것이 있는 경우
+        else if(uploadNumber.numFailed>0)
+        {
+            remoteViews.setViewVisibility(R.id.uploadFailImg, View.VISIBLE);
+            remoteViews.setViewVisibility(R.id.uploadProgressBar,View.GONE);
+            remoteViews.setTextViewText(R.id.uploadNumText,String.valueOf(uploadNumber.numFailed));
+            remoteViews.setTextViewText(R.id.uploadStateText,getString(R.string.notification_upload_fail_state));
+        }
+
+        //전송 대기 중인 경우
+        else if(uploadNumber.numStandby>0)
+        {
+            remoteViews.setViewVisibility(R.id.uploadFailImg, View.GONE);
+            remoteViews.setViewVisibility(R.id.uploadProgressBar,View.VISIBLE);
+            remoteViews.setTextViewText(R.id.uploadNumText,String.valueOf(uploadNumber.numStandby));
+            remoteViews.setTextViewText(R.id.uploadStateText,getString(R.string.notification_upload_standby_state));
+        }
+
+        //모두 업로드 완료 된 경우 service 종료
+        else
+        {
+//            remoteViews.setViewVisibility(R.id.uploadFailImg, View.GONE);
+//            remoteViews.setViewVisibility(R.id.uploadProgressBar,View.GONE);
+//            remoteViews.setTextViewText(R.id.uploadNumText,"");
+//            remoteViews.setTextViewText(R.id.uploadStateText,getString(R.string.notification_upload_success_state));
+            this.stopSelf();
+            return;
+        }
+
+
+
+//        remoteViews.setTextViewText(R.id.uploadingNumText,String.valueOf(uploadNumber.numUploading));
+//       remoteViews.setTextViewText(R.id.uploadingNumText,String.valueOf(uploadNumber.numUploading));
+//        remoteViews.setTextViewText(R.id.successNumText,String.valueOf(uploadNumber.numSuccess));
+//        remoteViews.setTextViewText(R.id.failNumText,String.valueOf(uploadNumber.numFailed));
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.notify(UPLOAD_NOTIFICATION_ID, notification);
+        mNotificationManager.notify(Constants.UPLOAD_NOTIFICATION_ID, notification);
 
 //        synchronized (notification)
 //        {

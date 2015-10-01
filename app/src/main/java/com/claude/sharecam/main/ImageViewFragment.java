@@ -41,7 +41,6 @@ public class ImageViewFragment extends Fragment {
 
 
     private void init() {
-//        resizableImageView
 
         imageViewProgressBar.setVisibility(View.VISIBLE);
         imageParseFile.getParseFile().getDataInBackground(new GetDataCallback() {
@@ -56,8 +55,6 @@ public class ImageViewFragment extends Fragment {
                 imageViewProgressBar.setVisibility(View.GONE);
             }
         });
-
-
     }
 
 

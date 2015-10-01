@@ -76,7 +76,7 @@ public class InputProfileSelectFragment extends ProfileSelectFragment implements
          * set listener
          */
 /*
-        //프로필 이미지 변경시
+        //프로필 이미지 변경시2
         setOnImageChosen(new OnImageChosen() {
             @Override
             public void onImageChosen(final ChosenImage image) {

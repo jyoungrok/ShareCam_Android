@@ -79,7 +79,7 @@
 //
 //                    //추가된 데이터들 설정
 //                    ((ShareActivity) getActivity()).setAddedItems(data.addedItems);
-//                    ((IndividualFragment) getParentFragment()).refreshItems();
+//                    ((IndividualFragment) getParentFragment()).refreshAPItems();
 //                    }
 //                }
 //
@@ -91,7 +91,7 @@
 //        }
 //        else{
 //            Log.d("jyr","not load data");
-//            ((IndividualFragment) getParentFragment()).refreshItems();
+//            ((IndividualFragment) getParentFragment()).refreshAPItems();
 //            setAdapter(getArguments().getInt(MODE));
 //
 //        }

@@ -77,7 +77,7 @@ public class ImageSelectFragment extends Fragment  implements
                 data=new Intent();
                 data.setData(Uri.parse(mediaPath));
             }
-            Log.d(TAG,"modify picture -> avairy");
+            Log.d(TAG,"modify PICTURE -> avairy");
             Util.startAvairy(getActivity(), data);
         }
         //사진편집완료

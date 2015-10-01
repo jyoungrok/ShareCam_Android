@@ -8,16 +8,19 @@ import android.os.Message;
 import android.util.Log;
 
 import com.claude.sharecam.Constants;
+import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.api.ErrorCode;
 import com.claude.sharecam.orm.UploadingPicture;
+import com.claude.sharecam.share.ShareItem;
 import com.claude.sharecam.upload.UploadService;
-import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.util.ImageManipulate;
 import com.parse.CountCallback;
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
+import com.parse.GetCallback;
+import com.parse.GetDataCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -26,6 +29,8 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.sql.SQLException;
@@ -39,17 +44,22 @@ import java.util.List;
  */
 public class ParseAPI {
 
+    public static final int NO_OBJECT_ERROR_CODE=101;
+
     public static final String TAG="ParseAPI";
     //pin label name
-    public static final String LABEL_CONTACT="contact";
+    public static final String LABEL_CONTACT="contact";// 쉐어캠에 없는 연락처를 저장
     public static final String LABEL_GROUP="group";
-    public static final String LABEL_FRIEND="friend";
+    //    public static final String LABEL_FRIEND="friend";// 쉐어캠에 있는 연락처들 저장
     public static final String LABEL_SHARECONTACT="shareContact";
-
+    public static final String LABEL_PICTURE="PICTURE";
+    public static final String LABEL_ALBUM ="sendAlbum";
+    public static final String LABEL_NOTIFICATION="notification";
 
     public static final String SM_PHONE_VERIFY = "sm_phone_verify";
     public static final String SM_PHONE_CONFIRM = "sm_phone_confirm";
-    public static final String SYNC_ALL_CONTACT ="sync_all_contact";
+    public static final String FETCH_CONTACT="fetch_contact";
+    public static final String SYNC_ALL_CONTACT ="sync_all_contact"; /** deprecated **/
     public static final String DELETE_CONTACT="delete_contact";
     public static final String INFORM_NEW_USER ="inform_new_user";
     //    public static final String SYNC_FRIEND_LIST="sync_friend_list";
@@ -64,44 +74,34 @@ public class ParseAPI {
      */
 
 
-    //회원가입시 혹은 로그인시 초기화 진행
-    //1. 연락처 서버에 올리기
-    //2. 연락처로 친구 목록 동기화
-    //3. 로컬로 친구들 불러오기
+    /**
+     * 회원 가입 시 호출
+     * wrapper function
+     *
+     * 1. initContact
+     * 2. fetchContact
+     */
+
     public static void initialize(ParseUser user, final Context context, final Handler handler)
     {
         Log.d(TAG,"initialize");
 
         //연락처 초기화
-        //모든 연락처 데이터 지우고 새로 업로드
+        //모든 연락처 데이터  업로드
         initContact(user, context, new Handler() {
 
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
 
-                HashMap<String, Object> params = new HashMap<String, Object>();
-//                params.put("type", String.valueOf(RETURN_ALL_FRIENDS_TYPE));
-                params.put("syncTime", Util.getContactSyncTime(context).getTime());
+                //수정된 연락처 불러오기
+                fetchContactInBackground(context, new Handler() {
 
-                //서버에서 연락처로 친구목록 동기화
-                ParseCloud.callFunctionInBackground(ParseAPI.SYNC_ALL_CONTACT, params, new FunctionCallback<List<Friend>>() {
-                    public void done(List<Friend> result, ParseException e) {
-                        if (e == null) {
-                            Log.d(TAG, "syncAllContact Done");
-                            Util.setContactSyncTime(context);
-                            //존재하는 친구들 불러와서 local에 저장
-                            initFriends(context, new Handler() {
-                                @Override
-                                public void handleMessage(Message msg) {
-                                    super.handleMessage(msg);
-                                    handler.sendEmptyMessage(0);
-                                }
-                            });
-                        } else {
-                            Log.d(TAG, "syncAllContact error");
-                            ParseAPI.erroHandling(context, e);
-                        }
+                    @Override
+                    public void handleMessage(Message msg) {
+                        super.handleMessage(msg);
+                        //Contact데이터 메모리에 로딩
+                        Util.initContactItemList(context, handler);
                     }
                 });
             }
@@ -109,137 +109,417 @@ public class ParseAPI {
         });
     }
 
-
-    // 연락처를 모두 삭제 후 새로 업로드
-    // 업로드한 연락처들 pinning
-    public static void initContact(ParseUser user, final Context context, final Handler handler) {
-
-        Log.d(TAG,"initContact");
-        //read contact list from content prover
-        final ArrayList<IndividualItem> arItem = Util.getContactList(context);
-
-
-        //서버의 모든 연락처 데이터 삭제
-        ParseCloud.callFunctionInBackground(ParseAPI.DELETE_CONTACT, new HashMap<String, Object>(), new FunctionCallback<JSONObject>() {
-            public void done(JSONObject result, ParseException e) {
-
-                Log.d(TAG,"deleteContact done");
-
-                if (e == null) {
-                    final List<Contact> contactList = new ArrayList<Contact>();
-
-                    for (int i = 0; i < arItem.size(); i++) {
-                        Contact contact = new Contact();
-                        contact.setCreatedBy(ParseUser.getCurrentUser());
-                        contact.setPhone(Util.convertToInternationalNumber(context, arItem.get(i).phoneNumber));
-                        contact.setACL(ParseUser.getCurrentUser());
-                        contactList.add(contact);
-                    }
-
-
-                    //기존에 저장되어 있던 로컬의 모든 연락처 데이터 삭제
-                    ParseObject.unpinAllInBackground(LABEL_CONTACT, new SCDeleteCallback(context, new SCDeleteCallback.Callback() {
-                        @Override
-                        public void done() {
-                            Log.d(TAG, "unpinAllContact done");
-                            //모든 연락처 데이터 local 저장
-
-
-                            //모든 연락처 데이터 서버에 저장
-                            ParseObject.saveAllInBackground(contactList, new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            Log.d(TAG, "save all contact done");
-                                            if (e == null) {
-                                                ParseObject.pinAllInBackground(LABEL_CONTACT, contactList, new SCSaveCallback(context, new SCSaveCallback.Callback() {
-
-                                                    @Override
-                                                    public void done() {
-                                                        Log.d(TAG, "pinAllContact done");
-//                                                        Util.setContactSyncTime(context);
-                                                        handler.sendEmptyMessage(0);
-                                                    }
-                                                }));
-                                            } else
-                                                ParseAPI.erroHandling(context, e);
-                                        }
-                                    }
-
-                            );
-//                            ParseObject.pinAllInBackground(LABEL_CONTACT, contactList, new SCSaveCallback(context, new SCSaveCallback.Callback() {
-//                                @Override
-//                                public void done() {
-//                                    Log.d(TAG,"pinAllContact done");
-//                                    //모든 연락처 데이터 서버에 저장
-//                                    ParseObject.saveAllInBackground(contactList, new SaveCallback() {
-//                                        @Override
-//                                        public void done(ParseException e) {
-//                                            Log.d(TAG,"save all contact done");
-//                                            if (e == null)
-//                                                handler.sendEmptyMessage(0);
-//                                            else
-//                                                ParseAPI.erroHandling(context, e);
-//                                        }
-//                                    });
-//                                }
-//                            }));
-                        }
-                    }));
-
-
-                } else
-                    ParseAPI.erroHandling(context, e);
+    public static void fetchContactInBackground(final Context context, final Handler handler)
+    {
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    fetchContact(context,handler);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
-        });
+
+        }.start();
     }
 
-    //기존 친구들 local에서 모두 삭제
-    //기존 parse server에 등록되어 있는 친구들 불러와 local store에 추가
-    public static void initFriends(final Context context, final Handler handler)
-    {
-        Log.d(TAG,"initFriends");
-        //기존 친구 데이터 모두 삭제
-        ParseObject.unpinAllInBackground(LABEL_FRIEND, new DeleteCallback() {
-            @Override
-            public void done(ParseException e) {
-                Log.d(TAG, "unpin all friend done");
-                if (e == null) {
+    /**
+     * background 호출 필요
+     * syncTime 이후 서버에서 갱신된 데이터들 받아와서 업데이트(phone, friendUser)
+     */
+    public static void fetchContact(final Context context, final Handler handler) throws ParseException {
+        Log.d(TAG,"fetch Contact");
 
-                    //서버로 부터 친구들 불러옴
-                    ParseQuery<Friend> query2 = ParseQuery.getQuery(Friend.class);
-                    query2.whereEqualTo("createdBy", ParseUser.getCurrentUser());
-                    query2.include("friendUser");
-                    query2.findInBackground(new FindCallback<Friend>() {
-                        @Override
-                        public void done(final List<Friend> list, ParseException e) {
-                            Log.d(TAG, "find all friend done");
-                            if (e == null) {
-                                //불러온 데이터 저장
-                                ParseObject.pinAllInBackground(LABEL_FRIEND, list, new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        Log.d(TAG, "pin all friend done");
-                                        if (e == null) {
-                                            handler.sendEmptyMessage(0);
-                                            //친구목록 동기화 시간 설정
-                                            setLastFriendUpdatedAt(context, list);
-                                            setFriendSyncTime(context);
-//                                            Util.setFriendLastUpdatedAt(context, list);
-                                        } else
-                                            ParseAPI.erroHandling(context, e);
-                                    }
-                                });
-                            } else
-                                ParseAPI.erroHandling(context, e);
-                        }
-                    });
-                } else {
-                    Log.d(TAG, "getExistingFriends1 error");
-                    ParseAPI.erroHandling(context, e);
-                }
+
+        HashMap<String, Object> params = new HashMap<String, Object>();
+//                params.put("type", String.valueOf(RETURN_ALL_FRIENDS_TYPE));
+        params.put("syncTime", Util.getContactSyncTime(context));
+
+        //서버에서 연락처로 친구목록 동기화
+        //
+        final HashMap<String, Object> result=(HashMap<String, Object>) ParseCloud.callFunction(ParseAPI.FETCH_CONTACT, params);
+        List<Contact> contactList = ((List<Contact>)(result).get("contact"));
+
+        Log.d(TAG, "fetch contact done " + contactList.size());
+
+        //가져온 데이터들이 있는 경우 갱신
+        if (contactList.size() > 0) {
+            List<ParseObject> contactPointList = new ArrayList<ParseObject>();
+            for (int i = 0; i < contactList.size(); i++) {
+
+                ParseObject contactPoint = ParseObject.createWithoutData("Point", contactList.get(i).getObjectId());
+                Contact.copyServerData(contactPoint, contactList.get(i));
+                contactPointList.add(contactPoint);
 
             }
-        });
+
+
+            ParseObject.pinAll(LABEL_CONTACT, contactPointList);
+
+            Util.setContactSyncTime(context, (Long) result.get("syncTime"));//sync time 갱신
+            Log.d(TAG, "pin fetched contact done");
+            handler.sendEmptyMessage(0);
+        }
+
+        else {
+            Util.setContactSyncTime(context, (Long) result.get("syncTime"));//sync time 갱신
+            handler.sendEmptyMessage(0);
+        }
+/*
+        ParseCloud.callFunctionInBackground(ParseAPI.FETCH_CONTACT, params, new FunctionCallback<HashMap<String, Object>>() {
+            public void done(final HashMap<String, Object> result, ParseException e) {
+                if (e == null) {
+                    final List<Contact> contactList = ((List<Contact>) result.get("contact"));
+
+//
+                    Log.d(TAG, "fetch contact done " + contactList.size());
+
+
+                    //가져온 데이터들이 있는 경우 갱신
+                    if (contactList.size() > 0) {
+                        List<ParseObject> contactPointList = new ArrayList<ParseObject>();
+                        for (int i = 0; i < contactList.size(); i++) {
+
+                            ParseObject contactPoint = ParseObject.createWithoutData("Point", contactList.get(i).getObjectId());
+                            Contact.copyServerData(contactPoint, contactList.get(i));
+                            contactPointList.add(contactPoint);
+
+                        }
+
+
+                        ParseObject.pinAllInBackground(LABEL_CONTACT, contactPointList, new SCSaveCallback(context, new SCSaveCallback.Callback() {
+                            @Override
+                            public void done() {
+                                Util.setContactSyncTime(context, (Long) result.get("syncTime"));//sync time 갱신
+                                Log.d(TAG, "pin fetched contact done");
+                                handler.sendEmptyMessage(0);
+                            }
+                        }));
+                    } else {
+                        Util.setContactSyncTime(context, (Long) result.get("syncTime"));//sync time 갱신
+                        handler.sendEmptyMessage(0);
+                    }
+
+                } else {
+                    ParseAPI.erroHandling(context, e);
+                }
+            }
+        });*/
+    }
+
+    /**
+     * 1. 모든 연락처들 server에 업로드
+     * 2. local data(contactName, contactPhotoUri)와 함께 연락처 데이터 pin
+     **/
+
+    public static void initContact(ParseUser user, final Context context, final Handler handler) {
+
+
+
+        Log.d(TAG,"initContact");
+        final long newLocalSyncTime=new Date().getTime();
+        //모든 연락처 불러오기
+        final ArrayList<Contact> contactList = Util.getContactListFromCP(context, 0);
+
+
+        Contact.saveAllInBackground(contactList, new SCSaveCallback(context, new SCSaveCallback.Callback() {
+            @Override
+            public void done() {
+                Log.d(TAG, "save all contact done");
+
+                //모든 데이터 삭제후 재 업로드
+                ParseObject.unpinAllInBackground(LABEL_CONTACT,new SCDeleteCallback(context, new SCDeleteCallback.Callback() {
+                    @Override
+                    public void done() {
+                        Log.d(TAG, "unpinAllContact done");
+                        Contact.pinAllInBackgroundWithLocalData(LABEL_CONTACT, contactList, new SCSaveCallback(context, new SCSaveCallback.Callback() {
+
+                            @Override
+                            public void done() {
+                                Log.d(TAG, "pinAllContact done");
+                                //로컬 동기화 시간 갱신
+                                Util.setLoalContactSyncTime(context, newLocalSyncTime);
+                                handler.sendEmptyMessage(0);
+                            }
+                        }));
+                    }
+                }));
+            }
+        }));
+    }
+
+
+
+    /**
+     * background 호출
+     * 1. 로컬의 연락처 데이터들을 동기화
+     * 2. 수정된 데이터 로컬(pin) 및 서버에 반영
+     * 3. 수정된 연락처 있다면 서버에서 가져와서 업데이트 (fetchContact)
+     */
+
+    public static void syncContact(final Context context,Handler handler) throws ParseException {
+
+        Log.d(TAG,"syncContact");
+        long newLocalSyncTime=new Date().getTime();
+        /**
+         *  추가 / 수정 데이터 로컬 동기화 및 서버 전송
+         */
+
+//        List<Contact> modifiedContactList=Util.getContactListFromCP(context,Util.getLocalContactSyncTime(context));//최종 로컬 동기화 시간 이후에 추가/수정된 데이터들만 불러옴
+
+
+        List<Contact> allPinnedContactList=ParseAPI.getPinnedContactList(false);
+        Log.d(TAG,"getPinnedContactList done");
+        List<Contact> allContactList=Util.getPinnedContactListFromCP(context, allPinnedContactList, 0);//android 기기에서 불러온 모든 연락처 데이터
+        Log.d(TAG,"getPinnedContactListFromCP done");
+        /**
+         *  삭제된 데이터 로컬 동기화 및 서버 전송
+         *  pin data와 CP 데이터의 갯수 비교 -> 삭제된 거 있는 경우 찾아서 삭제
+         */
+        int pinnedSize=allPinnedContactList.size();//저장되어는 로컬 연락처 데이터들
+
+        if(pinnedSize==allContactList.size())
+        {
+            Log.d(TAG,"any contacts haven't deleted");
+        }
+        else{
+            int deltedSize=pinnedSize-allContactList.size();
+            Log.d(TAG,"contacts deleted "+(deltedSize)+" and find deleted contact");
+//            ParseQuery<Contact> query2=ParseQuery.getQuery(Contact.class);
+//            query2.fromPin(LABEL_CONTACT);
+//            List<Contact> pinnedContactList=query2.find();
+
+            ArrayList<Contact> deletedContactList=new ArrayList<Contact>();
+            //삭제된 연락처 데이터 찾기
+            for(int i=0; i<allPinnedContactList.size(); i++)
+            {
+                if(deltedSize==0)
+                    break;
+
+                for(int j=0; j<allContactList.size(); j++)
+                {
+                    //존재하는 연락처의 경우
+                    if(allPinnedContactList.get(i).getPhone().equals(allContactList.get(j).getPhone()))
+                    {
+                        allContactList.remove(j);
+                        break;
+
+                    }
+                    //삭제된 연락처인 경우
+                    else if(j==allContactList.size()-1)
+                    {
+                        Log.d(TAG,"delete "+allPinnedContactList.get(i).getPinContactName()+" "+allPinnedContactList.get(i).getPhone());
+                        deletedContactList.add(allPinnedContactList.get(i));
+                        deltedSize--;
+                    }
+                }
+            }
+
+//            ParseObject.unpinAll(LABEL_CONTACT,deletedContactList);
+//            Log.d(TAG,"unpin done "+deletedContactList.size());
+            ParseObject.deleteAll(deletedContactList);
+            Log.d(TAG,"delete done "+deletedContactList.size());
+
+            allPinnedContactList=ParseAPI.getPinnedContactList(false);
+        }
+
+        List<Contact> modifiedContactList=Util.getPinnedContactListFromCP(context, allPinnedContactList, Util.getLocalContactSyncTime(context));
+
+        /**
+         * 수정 된 데이터가 있다면 save to server, pin to local
+         * syncTime 이후에 수정된 데이터 CP data에서 가져와서 Pin data 에 적용 및 서버 전송
+         */
+        if(modifiedContactList.size()>0) {
+            ArrayList<Contact> syncNeededContactcList = new ArrayList<Contact>();//phone이 수정된 경우
+            ArrayList<Contact> pinNeededContactList=new ArrayList<Contact>();//local 갱신 필요 데이터 (contactName,PhotoUri,phone 중 하나가 수정된 경우)
+            //추가 혹은 수정된 연락처 로컬 동기화 및 서버 전송
+            Log.d(TAG, "contact "+modifiedContactList.size() + " modified");
+
+            for (int i = 0; i < modifiedContactList.size(); i++) {
+
+                ParseQuery<Contact> modifiedContact = ParseQuery.getQuery(Contact.class);
+                modifiedContact.whereEqualTo("recordId", modifiedContactList.get(i).getRecordId());
+//                modifiedContact.whereEqualTo("phone", modifiedContactList.get(i).getPhone());
+                modifiedContact.fromPin(LABEL_CONTACT);
+                List<Contact> origin = modifiedContact.find();
+                Log.d(TAG, "modified recordId=" + origin.get(0).getRecordId() + " modified=" + origin.get(0).getContactName() + " " + origin.get(0).getPhone());
+
+                //연락처 데이터가 수정된 경우
+                if (origin.size() != 0) {
+
+                    //전화번호가 수정 되지 않은 경우
+                    if(modifiedContactList.get(i).getPhone().equals(origin.get(0).getPhone()))
+                    {
+                        //phone
+                        if(! modifiedContactList.get(i).getContactName().equals(origin.get(0).contactName) ||
+                                !(modifiedContactList.get(i).getContactPhotoUri()!=null && origin.get(0).contactPhotoUri!=null && modifiedContactList.get(i).getContactPhotoUri().equals(origin.get(0).contactPhotoUri)) ||
+                                !(modifiedContactList.get(i).getContactPhotoUri()==null && origin.get(0).contactPhotoUri==null))
+                        {
+                            Log.d(TAG, "pin recordId=" + modifiedContactList.get(i).getRecordId() + " modified=" + modifiedContactList.get(i).getContactName() + " " + modifiedContactList.get(i).getPhone());
+
+                            origin.get(0).setContactName(modifiedContactList.get(i).getContactName());
+                            origin.get(0).setContactPhotoUri(modifiedContactList.get(i).getContactPhotoUri());
+                            pinNeededContactList.add(origin.get(0));
+                        }
+                    }
+                    //전화번호가 수정된 경우 -> 서버 반영
+                    else {
+                        Log.d(TAG, "save recordId=" + modifiedContactList.get(i).getRecordId() + " modified=" + modifiedContactList.get(i).getContactName() + " " + modifiedContactList.get(i).getPhone());
+
+                        //원래 데이터에 받아온 데이터의 서버 데이터 내용 복사후 데이터 서버에 저장 하기 위한 리스트에 추가
+                        origin.get(0).setPhoneNumber(context, modifiedContactList.get(i).getPhone());
+                        syncNeededContactcList.add(origin.get(0));
+                        origin.get(0).setContactName(modifiedContactList.get(i).getContactName());
+                        origin.get(0).setContactPhotoUri(modifiedContactList.get(i).getContactPhotoUri());
+                        pinNeededContactList.add(origin.get(0));
+                    }
+                }
+            }
+
+
+            //수정/ 추가된 연락처 로컬 저장
+//            ParseObject.pinAll(LABEL_CONTACT,syncNeededContactcList);
+            Contact.pinAllWithLocalData(LABEL_CONTACT,pinNeededContactList);
+            Log.d(TAG, "modified contact pin done " + pinNeededContactList.size());
+            ParseObject.saveAll(syncNeededContactcList);
+            Log.d(TAG, "modified contact save done " + syncNeededContactcList.size());
+        }
+        else{
+            Log.d(TAG,"any contacnts haven't modified");
+        }
+
+        /**
+         * 추가된 데이터가 있다면 추가
+         * pin data recordId 이외의 contact data 중 syncTime 이후에 수정된 데이터(새로운 전화번호) 저장
+         */
+        ArrayList<Contact> addedContactList=Util.getContactListWithoutPinFromCP(context,allPinnedContactList, Util.getLocalContactSyncTime(context));
+        if(addedContactList.size()>0)
+        {
+            Log.d(TAG,"contact "+addedContactList.size()+" added");
+
+            ParseObject.saveAll(addedContactList);
+            Contact.pinAllWithLocalData(LABEL_CONTACT,addedContactList);
+        }
+        else{
+            Log.d(TAG,"any contacnts haven't added");
+        }
+
+
+        //로컬 타임 동기화
+        Util.setLoalContactSyncTime(context,newLocalSyncTime);
+
+        /**
+         * 서버에서 수정된 데이터 동기화 후 종료
+         */
+        fetchContact(context,handler);
+
+
+    }
+
+
+
+
+    public static List<Contact> getPinnedContactList(boolean sortByName) throws ParseException {
+        ParseQuery<Contact> query=ParseQuery.getQuery(Contact.class);
+        query.fromPin(LABEL_CONTACT);
+        query.include("friendUser");
+        if(sortByName)
+            query.orderByAscending("contactName");
+        List<Contact> result=query.find();
+        if(result==null)
+            result=new ArrayList<Contact>();
+        return result;
+    }
+
+    /**
+     * 전화번호로 연락처 이름 가져오기
+     */
+    public static String getContactNameWithPhone(String phone) throws ParseException {
+        ParseQuery<Contact> query=ParseQuery.getQuery(Contact.class);
+        query.whereEqualTo("phone", phone);
+        query.fromPin(LABEL_CONTACT);
+        Contact contact=query.getFirst();
+
+        if(contact==null)
+        {
+            return phone;
+        }
+        else
+        {
+            return contact.getPinContactName();
+        }
+    }
+
+    //쉐어캠에 있는 연락처 친구들 불러오기 (Contact의 friendUser field가 exist한 object들)
+    public static List<Contact> getContactListWithFriendUser() throws ParseException {
+        ParseQuery<Contact> query=ParseQuery.getQuery(Contact.class);
+        query.whereExists("friendUser");
+        query.fromPin(LABEL_CONTACT);
+        query.include("friendUser");
+        List<Contact> result=query.find();
+        if(result==null)
+            result=new ArrayList<Contact>();
+        return result;
+    }
+
+    //공유 설정 친구들 불러오기
+    //preference에 공유하고자 하는 전화번호 저장되어 있는데 이와 matching되는 것을 찾음
+    public static List<Contact> getShareContactList(Context context,List<Contact> contactList,List<Contact> friendList){
+
+        Log.d(TAG,"getShareContactsList");
+        ArrayList<Contact> addedItems=new ArrayList<Contact>();//공유 대상
+//        ArrayList<String> sharePhoneList=Util.getShareIndividual(context);
+
+        /**
+         * 1. 친구 리스트 중에 공유 설정한 사용자가 있는지 확인 -> 없는 경우 추가 안함
+         * 2. 친구 아닌 연락처에서 해당 전화번호 있는지 확인 -> 없는 경우 추가 안함
+         */
+
+        ShareItem shareItem = null;
+
+        try {
+            shareItem=Util.getShareList(context);
+        } catch (JSONException e) {
+            Log.e(TAG,e.getMessage());
+            e.printStackTrace();
+        }
+//        ArrayList<String> shareUserList= (ArrayList<String>) shareItem.shareUserList;
+        ArrayList<String> sharePhoneList= (ArrayList<String>) shareItem.sharePhoneList;
+
+
+
+        //1. 친구 리스트 중에 공유 설정한 사용자가 있는지 확인 -> 없는 경우 추가 안함
+        for(int i=0; i<sharePhoneList.size(); i++)
+        {
+            for(int j=0; j<friendList.size(); j++)
+            {
+                if(sharePhoneList.get(i).equals(friendList.get(j).getFriendUser().getPhone()))
+                {
+                    addedItems.add(friendList.get(j));
+                    sharePhoneList.remove(i);
+                    i--;
+                    break;
+                }
+            }
+        }
+
+        for(int i=0; i<sharePhoneList.size(); i++)
+        {
+            for(int j=0; j<contactList.size(); j++)
+            {
+                if(sharePhoneList.get(i).equals(contactList.get(j).getPhone()))
+                {
+                    addedItems.add(contactList.get(j));
+                    sharePhoneList.remove(i);
+                    i--;
+                    break;
+                }
+            }
+        }
+
+
+        return  addedItems;
     }
 
     /**
@@ -250,83 +530,12 @@ public class ParseAPI {
 
 
 
-    //select * from picture where friendList = sdfgsdfg and dfgdsfg = dsfgdfg ;
+    //select * from PICTURE where friendList = sdfgsdfg and dfgdsfg = dsfgdfg ;
 
 
 
-    //개인에게 받은 사진 목록 받아오기
-    public static void getPicturesByMe(int page,int num,FindCallback<Picture> findCallback)  {
-        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
-        query.whereEqualTo("friendList", ParseUser.getCurrentUser().getObjectId());
-        query.whereEqualTo("hasPhoto",true);
-        query.whereEqualTo("photoSynched",true);
-        query.orderByDescending("createdAt");
-        query.setSkip((page-1)*num);
-        query.setLimit(num);
-        query.findInBackground(findCallback);
-    }
 
 
-
-    //나의 그룹들 불러오기
-//    public static void getGroupsByMe(int page, final Context context, final Handler handler)
-//    {
-//        ParseQuery<Group> queryByCreatedBy=ParseQuery.getQuery(Group.class);
-//        queryByCreatedBy.whereEqualTo("createdBy",ParseUser.getCurrentUser());
-//        ParseQuery<Group> queryByFriend=ParseQuery.getQuery(Group.class);
-//        queryByFriend.whereEqualTo("friendList",ParseUser.getCurrentUser().getObjectId());
-//        ParseQuery<Group> queryByPhone=ParseQuery.getQuery(Group.class);
-//        queryByPhone.whereEqualTo("phoneList",ParseUser.getCurrentUser().getObjectId());
-//
-//        List<ParseQuery> queryList=new ArrayList<ParseQuery>();
-//        queryList.add(queryByCreatedBy);
-//        queryList.add(queryByFriend);
-//        queryList.add(queryByPhone);
-//        ParseQuery<Group> mainQuery=ParseQuery.or(queryList);
-//        mainQuery.setSkip((page-1)*Constants.NUM_LOAD_GROUP);
-//        mainQuery.setLimit(Constants.NUM_LOAD_GROUP);
-//        mainQuery.orderByDescending("updatedAt");
-//        mainQuery.findInBackground(new FindCallback<Group>() {
-//            @Override
-//            public void done(final List<Group> list, ParseException e) {
-//                if(e==null) {
-//                    ParseObject.unpinAllInBackground(LABEL_GROUP, new DeleteCallback() {
-//                        @Override
-//                        public void done(ParseException e) {
-//                            if(e==null)
-//                            {
-//                                ParseObject.pinAllInBackground(LABEL_GROUP, list,new SCSaveCallback(context, new SCSaveCallback.Callback() {
-//                                    @Override
-//                                    public void done() {
-//                                        handler.sendEmptyMessage(0);
-//                                    }
-//                                }));
-//                            }
-//                            else
-//                                ParseAPI.erroHandling(context,e);
-//                        }
-//                    });
-//                }
-//                else
-//                    ParseAPI.erroHandling(context,e);
-//            }
-//        });
-//    }
-
-    //개인에게 받은 사진 목록 받아오기 (with thumbnail images)
-    public static List<Picture> getPicturesByMe()  {
-        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
-        query.whereEqualTo("friendList", ParseUser.getCurrentUser().getObjectId());
-        query.whereEqualTo("hasPhoto", true);
-        query.whereEqualTo("photoSynched", true);
-        query.setLimit(Constants.NUM_LOAD_PICTURE);
-        try {
-            return query.find();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     public static void getPicturesCountByMe(CountCallback countCallback)
     {
@@ -337,28 +546,6 @@ public class ParseAPI {
         query.countInBackground(countCallback);
     }
 
-//    //업로드된 주소록 기반 쉐어캠 친구 목록 동기화
-//    // 서버에서 새로운 친구 추가 하고
-//    //클라이언트에서 새로운 친구를 local store에 추가
-//    public static void syncFriendWithContact(final Context context,final Handler handler)
-//    {
-//        Log.d("jyr", "sync friend with contact");
-//        ParseCloud.callFunctionInBackground(ParseAPI.SYNC_ALL_CONTACT, new HashMap<String, Object>(), new FunctionCallback<List<Friend>>() {
-//            public void done(List<Friend> result, ParseException e) {
-////                Log.d("jyr",result.toString());
-//                if (e == null) {
-//                    try {
-//                        //새로운 친구 local store에 추가
-//                        ParseObject.pinAll(result);
-//                    } catch (ParseException e1) {
-//                        e1.printStackTrace();
-//                    }
-//                    handler.sendEmptyMessage(0);
-//                } else
-//                    ParseAPI.erroHandling(context, e);
-//            }
-//        });
-//    }
 
     //새로운 사용자의 등록을 타사용자에게 알림
     //타 사용자 중에 해당 사용자의 연락처를 가지고 있는 경우 친구 추가
@@ -368,7 +555,7 @@ public class ParseAPI {
 
                 if(e==null) {
 
-                                handler.sendEmptyMessage(0);
+                    handler.sendEmptyMessage(0);
 
                 }
                 else
@@ -377,52 +564,27 @@ public class ParseAPI {
         });
     }
 
-    //local에서 친구 목록 불러옴
-    public static List<Friend> getFriends_Local(final Context context) throws ParseException {
-        ParseQuery<Friend> query=ParseQuery.getQuery(Friend.class);
-        query.whereEqualTo("createdBy", ParseUser.getCurrentUser());
-        query.whereEqualTo("deleted",false);
-        query.setLimit(1000);
-        query.include("friendUser");
-        query.fromPin(LABEL_FRIEND);
-
-        return query.find();
-
-    }
-
-//
-//    public static List<Individual> getSharePerson_Local(final Context context)
-//    {
-//
-//        ParseQuery<Individual> query=ParseQuery.getQuery(Individual.class);
-//        query.setLimit(1000);
-//        query.fromLocalDatastore();
-//        try {
-//            return query.find();
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
 
     //그룹 생성
-    public static void createGroup(final Context context,String groupName,ArrayList<IndividualItem> individualList,SaveCallback saveCallback)
+    public static void createGroup(final Context context,String groupName,List<Contact> individualList,SaveCallback saveCallback)
     {
         Group group=new Group();
         group.setName(groupName);
         group.setCreatedBy(ParseUser.getCurrentUser());
         for(int i=0; i<individualList.size(); i++)
         {
+
             //쉐어캠 친구인 경우
-            if(individualList.get(i).MODE==IndividualItem.FRIEND)
+            if(individualList.get(i).getFriendUser()!=null)
             {
-                group.setFriendId(individualList.get(i).objectId);
+                group.setUserList(individualList.get(i).getFriendUser());
             }
             //연락처 친구
             else
             {
-                group.setPhoneId(individualList.get(i).phoneNumber);
+                group.setPhoneList(individualList.get(i).getPhone());
             }
+
         }
 
         group.saveInBackground(saveCallback);
@@ -431,6 +593,12 @@ public class ParseAPI {
     //전송 실패한 사진 다시 전송
     public static void reUploadFailedPicture(Context context,UploadingPicture uploadingPicture)
     {
+        //네트워크 연결 불안정 시
+        if(Util.checkNetwork(context))
+        {
+            Util.showToast(context, R.string.network_unavailable);
+            return;
+        }
 
         if(uploadingPicture.getState()==UploadingPicture.FAILED_UPLOADING_STATE)
         {
@@ -444,38 +612,14 @@ public class ParseAPI {
     }
 
     //공유 대상에게 이미지 업로드
-    public static void uploadPicture(final Context context,List<IndividualItem> spItems, final String filePath) throws SQLException {
+    public static void uploadPicture(final Context context,ShareItem shareItem, final String filePath) throws SQLException {
+
+        Log.d(TAG,"uploadPicture");
 
         //공유 대상이 없는 경우 서버에 업로드 안함
-        if(spItems.size()==0)
+        if(shareItem.isEmpty())
             return;
 
-        Log.d(TAG,"uploadPicture"+spItems.size());
-
-//        final Picture picture=new Picture();
-//        picture.setCreatedBy(createdBy);
-//        picture.init();
-
-        ShareItem shareItem =new ShareItem();
-
-        for(int i=0; i<spItems.size(); i++)
-        {
-            //쉐어캠 친구인 경우
-            if(spItems.get(i).MODE==IndividualItem.FRIEND )
-            {
-                Log.d(TAG,"setFriend"+spItems.get(i).objectId);
-//                picture.setFriendId(spItems.get(i).getFriendObjectId());
-                shareItem.friendList.add(spItems.get(i).objectId);
-            }
-            //연락처 친구
-            else
-            {  Log.d(TAG,"setContact"+spItems.get(i).getInternationalPhoneNumber(context));
-//                picture.setPhone(spItems.get(i).getInternationPhone(context));
-                shareItem.phoneList.add(spItems.get(i).getInternationalPhoneNumber(context));
-            }
-        }
-
-//        Log.d(TAG,"upload friend length="+picture.getFriendList().length());
 
 
         Intent serviceIntent=new Intent(UploadService.UPLOAD_ACTION);
@@ -486,370 +630,45 @@ public class ParseAPI {
     }
 
 
-
+    //
     //공유 대상에게 이미지 업로드
-    public static void uploadPicture(final Context context,List<IndividualItem> spItems, final ArrayList<String> filePathList,ParseUser createdBy)
+    public static void uploadPicture(final Context context,ShareItem shareItem, final ArrayList<String> filePathList,ParseUser createdBy)
     {
+
+        if(shareItem.isEmpty())
+            return;
 
         Log.d("jyr","uploadPicture");
 
         for(int i=0; i<filePathList.size(); i++) {
-            Picture picture = new Picture();
-            picture.setCreatedBy(createdBy);
-            picture.init();
-
-
-            for (int j = 0; j < spItems.size(); j++) {
-                //쉐어캠 친구인 경우
-                if (spItems.get(j).MODE==IndividualItem.FRIEND) {
-                    picture.setFriendId(spItems.get(j).objectId);
-                }
-
-                //연락처 친구
-                else {
-                    picture.setPhone(spItems.get(j).getInternationalPhoneNumber(context));
-
-                }
-            }
 
 
             Intent serviceIntent=new Intent(UploadService.UPLOAD_ACTION);
             serviceIntent.setClass(context,UploadService.class);
-            serviceIntent.putExtra(UploadService.PICTURE,picture);
+            serviceIntent.putExtra(UploadService.PICTURE,shareItem);
             serviceIntent.putExtra(UploadService.FILE_PATH,filePathList.get(i));
             context.startService(serviceIntent);
 
 
-//            picture.saveEventually(new SaveCallback() {
-//                @Override
-//                public void done(ParseException e) {
-//                    if (e == null) {
-//                        Log.d("jyr", "picutre object upload done");
-//                        picture.setPhotoSynched();
-//                        picture.setImage(new ParseFile(picture.getObjectId() + ".JPEG", ImageManipulate.convertImageToByte(context, filePathList.get(index))));
-//                        picture.saveInBackground(new SaveCallback() {
-//                            @Override
-//                            public void done(ParseException e) {
-//                                if (e == null) {
-//                                    Log.d("jyr", "image upload success");
-//                                } else
-//                                    ParseAPI.erroHandling(context, e);
-//                            }
-//                        });
-//
-//                    } else {
-//                        ParseAPI.erroHandling(context, e);
-//                    }
-//                }
-//            });
         }
     }
+
+//    public static List<Picture> getAlbumCreatedByMe()
+//    {
+//        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+//
+//    }
 
     public static void erroHandling(Context context,ParseException e)
     {
-        Log.e(TAG, "Error: " + e.getMessage());
+        Log.e(TAG, "Error: " + e.getMessage() + e.getCode());
         Util.showToast(context, ErrorCode.getToastMessageId(e));
     }
 
-    public static void setFriendSyncTime(Context context)
-    {
-        //마지막 sync 시간
-        ((Util)context.getApplicationContext()).editor.putLong(Constants.PREF_FRIEND_SYNC_TIME,new Date().getTime()).commit();
-
-    }
-
-    //친구 동기화 완료 시간 설정
-    //friend last date 설정
-    public static void setFriendLastUpdatedAt(Context context,long lastUpdatedAt)
-    {
-
-        //friend date중 last time
-        ((Util)context.getApplicationContext()).editor.putLong(Constants.PREF_FRIEND_LATST_UPDATED_AT, lastUpdatedAt).commit();
-    }
-
-    public static long getFriendSyncTime(Context context)
-    {
-       return  ((Util)context.getApplicationContext()).pref.getLong(Constants.PREF_FRIEND_SYNC_TIME,Constants.PREF_FRIEND_SYNC_TIME_DEFAULT);
-    }
-    //친구 동기화 했던 마지막 시간 얻어오기
-    public static Date getFriendLastUpdatedAt(Context context)
-    {
-
-        long lastUpdatedAt=((Util)context.getApplicationContext()).pref.getLong(Constants.PREF_FRIEND_LATST_UPDATED_AT, Constants.PREF_FRIEND_LAST_UPDATED_AT_DEFAULT);
-//        Log.d(TAG,new )
-        return new Date(lastUpdatedAt);
-    }
-
-
-    public static void setLastFriendUpdatedAt(Context context,List<Friend> dataList)
-    {
-        if(dataList.size()==0)
-            return;
-        Log.d(TAG,"setFriendLastUpdatedAt");
-        long lastUpdatedAt=0;
-        //friend list중 last updatedAt찾기
-        for(int i=0; i<dataList.size(); i++)
-        {
-            if(lastUpdatedAt<dataList.get(i).getUpdatedAt().getTime()){
-                lastUpdatedAt=dataList.get(i).getUpdatedAt().getTime();
-            }
-        }
-
-        setFriendLastUpdatedAt(context,lastUpdatedAt);
-
-    }
-
-    public static void setLastUpdatedAt(Context context,String className,List<ParseObject> dataList)
-    {
-        if(dataList.size()==0)
-            return;
-        Log.d(TAG,"setLastUpdatedAt "+className);
-        long lastUpdatedAt=0;
-        //friend list중 last updatedAt찾기
-        for(int i=0; i<dataList.size(); i++)
-        {
-            if(lastUpdatedAt<dataList.get(i).getUpdatedAt().getTime()){
-                lastUpdatedAt=dataList.get(i).getUpdatedAt().getTime();
-            }
-        }
-
-        if(className.equals(Friend.CLASS_NAME))
-        {
-            setFriendLastUpdatedAt(context,lastUpdatedAt);
-        }
-    }
-    public static Date getLastUpdatedAt(Context context,String className)
-    {
-        if(className.equals(Friend.CLASS_NAME))
-        {
-            return getFriendLastUpdatedAt(context);
-        }
-        return null;
-    }
-
-
-    public static void pinNewData(String className,List<ParseObject> newData) throws ParseException {
-        Log.d(TAG,"pin new data "+className+" size="+newData.size());
-        if(className.equals(Friend.CLASS_NAME))
-        {
-            ParseObject.pinAll(LABEL_FRIEND,newData);
-        }
-
-    }
-
-    //parse와 data 동기화
-    public static void syncParseData(final Context context, String className)
-    {
-
-        if(ParseUser.getCurrentUser()==null)
-        {
-            Log.d(TAG,"can not sync without sigining in");
-            return;
-        }
-        Log.d(TAG,"sync data name="+className) ;
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        Date lastDataTime=getLastUpdatedAt(context,className);
-        Log.d(TAG,"syncTime = "+Util.dateToUTCStr(new Date(ParseAPI.getFriendSyncTime(context))));
-        params.put("className",className);
-        params.put("syncDate", lastDataTime);
-        List<ParseObject> newData= null;
-        try {
-            newData = ParseCloud.callFunction(ParseAPI.SYNC_DATA, params);
-        } catch (ParseException e) {
-            Log.e(TAG,"error = "+e.getMessage());
-            e.printStackTrace();
-            return;
-        }
-//        Log.d(TAG,"find new friend "+newFriend.size()+"list done");
-
-
-        if(newData.size()!=0)
-        {
-            try {
-                pinNewData(className, newData);
-                setLastUpdatedAt(context,className,newData);
-            } catch (ParseException e) {
-                Log.e(TAG,"pin new data error");
-                e.printStackTrace();
-                return;
-            }
-        }
-
-        setLastUpdatedAt(context, className, newData);
-        Log.d(TAG,"sync "+className+" data done") ;
-
-    }
-
-    static public void syncFriend()
-    {
-
-    }
-/*
-    //친구 리스트 서버로 부터 동기화
-    public static void syncFriendList(final Context context) {
 
 
 
-        if(ParseUser.getCurrentUser()==null)
-        {
-            Log.d(TAG,"can not sync without sigining in");
-            return;
-        }
-        Log.d(TAG,"syncFriendList") ;
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        Date syncTime=getFriendLastUpdatedAt(context);
-        Log.d(TAG,"syncTime = "+syncTime);
-        params.put("className",Friend.CLASS_NAME);
-        params.put("syncTime", syncTime);
-        List<Friend> newFriend= null;
-        try {
-            newFriend = ParseCloud.callFunction(ParseAPI.SYNC_DATA, params);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return;
-        }
-//        Log.d(TAG,"find new friend "+newFriend.size()+"list done");
 
-
-        if(newFriend.size()!=0)
-        {
-            Log.d(TAG,"pin all new friends"+newFriend.size());
-            try {
-                ParseObject.pinAll(LABEL_FRIEND,newFriend);
-                //last updatedAt 갱신
-//                setFriendLastUpdatedAt(context, newFriend);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-*/
-
-    //performance 향상을 위해 백그라운드 호출 필요
-    // local 데이터베이스에 연락처 데이터를 듕기화한 뒤 (추가된 것들 추가 , 삭제 된 것들 삭제)
-    // 변경사항을 서버에 업로드
-    // 추가된 연락처에 대해 친구가 있는지 검사 후 있을 시 친구 추가
-
-    public static void syncContact(final Context context) throws ParseException {
-
-        Log.d(TAG,"syncContact");
-
-        if(ParseUser.getCurrentUser()==null)
-        {
-            Log.d(TAG,"can not sync without sigining in");
-            return;
-        }
-
-        //연락처 데이터를 불러옴
-        final ArrayList<IndividualItem> contactItems = Util.getContactList(context);
-
-        Log.d(TAG,"get "+contactItems.size()+"contacts");
-
-        final List<Contact> addedContactItems=new ArrayList<Contact>();
-        final List<Contact> deletedContactItems=new ArrayList<Contact>();
-
-        Util.logCurrentThread(TAG);
-
-
-        //연락처 데이터를 local database에서 불러옴
-        ParseQuery<Contact> query=ParseQuery.getQuery(Contact.class);
-        query.fromPin(LABEL_CONTACT);
-        List<Contact> dataItems=query.find();
-        Log.d(TAG,"find "+dataItems.size()+"contact from local done");
-
-        //삭제된 연락처 있는지 확인
-        //추가된 연락처 찾기
-        for(int i=0; i<dataItems.size(); i++)
-        {
-            for(int j=0; j<contactItems.size(); j++)
-            {
-                //데이터가 같은 것이 있는 경우
-                if(dataItems.get(i).getPhone().equals(Util.convertToInternationalNumber(context,contactItems.get(j).phoneNumber)))
-                {
-                    contactItems.remove(j);
-                    break;
-                }
-                //데이터가 같은 것이 없는 경우 -> 삭제된 연락처
-                else if(j==contactItems.size()-1)
-                {
-                    deletedContactItems.add(dataItems.get(i));
-                }
-            }
-        }
-
-        //추가된 연락처들
-        for(int i=0; i<contactItems.size(); i++)
-        {
-            Contact contact=new Contact();
-            contact.setCreatedBy(ParseUser.getCurrentUser());
-            contact.setPhoneNumber(context, contactItems.get(i).phoneNumber);
-            contact.setACL(ParseUser.getCurrentUser());
-            addedContactItems.add(contact);
-        }
-
-        // 삭제된 연락처 데이터 삭제 (서버, 로컬)
-        if(deletedContactItems.size()>0) {
-            for(int i=0; i<deletedContactItems.size(); i++)
-            {
-
-                deletedContactItems.get(i).setDeleted(true);
-            }
-            ParseObject.saveAll(deletedContactItems);
-            Log.d(TAG, "delete " + deletedContactItems.size() + "contacts done");
-            ParseObject.unpinAll(LABEL_CONTACT, deletedContactItems);
-            Log.d(TAG, "delete " + deletedContactItems.size() + "contacts local done");
-        }
-        if(addedContactItems.size()>0) {
-            ParseObject.saveAll(addedContactItems);
-            Log.d(TAG, "save " + addedContactItems.size() + "contacts done");
-            ParseObject.pinAll(LABEL_CONTACT, addedContactItems);
-            Log.d(TAG, "save " + addedContactItems.size() + "contacts local done");
-        }
-
-
-        /**
-         * 서버에서 연락처로 친구목록 동기화
-         */
-        if(deletedContactItems.size()==0 && addedContactItems.size()==0) {
-            //추가된 연락처 없을 시 동기화 수행 안함
-            Util.setContactSyncTime(context);
-
-
-        }
-        else{
-            HashMap<String, Object> params = new HashMap<String, Object>();
-//        params.put("type", RETURN_ADDED_FRIENDS_TYPE);
-            params.put("syncTime",Util.getContactSyncTime(context).getTime());
-            List<Friend> newFrineds=ParseCloud.callFunction(ParseAPI.SYNC_ALL_CONTACT, params);
-            //추가, 삭제된 친구 return
-            if(newFrineds.size()>0) {
-                Log.d(TAG, "syncAllContact Done");
-                ParseObject.pinAll(LABEL_FRIEND, newFrineds);
-                Log.d(TAG, "save new " + newFrineds.size() + " friend to local done");
-            }
-            else{
-                Log.d(TAG,"syncAllContact Done but there isn't any modification");
-            }
-        }
-        Log.d(TAG,"Contact sync done");
-//            handler.sendEmptyMessage(0);
-
-
-/*
-        HashMap<String, Object> params = new HashMap<String, Object>();
-//        params.put("type", RETURN_ADDED_FRIENDS_TYPE);
-        params.put("syncTime",Util.getContactSyncTime(context).getTime());
-        List<Friend> newFrineds=ParseCloud.callFunction(ParseAPI.SYNC_ALL_CONTACT, params);
-        if(newFrineds.size()>0) {
-            Log.d(TAG, "syncAllContact Done");
-            ParseObject.pinAll(LABEL_FRIEND, newFrineds);
-            Log.d(TAG, "save new " + newFrineds.size() + " friend to local done");
-        }
-
-        Util.setContactSyncTime(context);*/
-
-    }
 
 
     public static void uploadProfilePicture(Context context,String filePath, final SCSaveCallback scSaveCallback)
@@ -862,9 +681,9 @@ public class ParseAPI {
         profileFile.saveInBackground(new SCSaveCallback(context, new SCSaveCallback.Callback() {
             @Override
             public void done() {
-                User user= (User) ParseUser.getCurrentUser();
+                User user = (User) ParseUser.getCurrentUser();
                 user.setProfile(profileFile);
-                user.put("name","dfgdg");
+                user.put("name", "dfgdg");
                 user.saveInBackground(scSaveCallback);
             }
         }));
@@ -878,5 +697,278 @@ public class ParseAPI {
         User user= (User) ParseUser.getCurrentUser();
         user.deleteInBackground(deleteCallback);
     }
+
+    /**
+     *
+     * 사진 불러오기
+     *
+     */
+
+    /**
+     * 특정 앨범의 다운로드 하지 않은 사진들 가져오기
+     */
+    public static void findNotDownloadedPicturesInBackground(Album album,FindCallback<Picture> findCallback)
+    {
+        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+        query.fromPin(LABEL_PICTURE);
+        query.whereEqualTo(Picture.ALBUM, album);
+        query.whereEqualTo(Picture.SAVED,false);
+        query.findInBackground(findCallback);
+    }
+
+    /**
+     * find 앨범
+     */
+    public static void findAlbumByIdInBackground(String id, GetCallback<Album> getCallback) {
+        ParseQuery<Album> query = ParseQuery.getQuery(Album.class);
+        query.fromPin(LABEL_ALBUM);
+        query.whereEqualTo(Album.LOCAL_ID,id);
+        query.getFirstInBackground(getCallback);
+//        query.getInBackground(String.valueOf(id), getCallback);
+    }
+
+    public static Album findAlbumById(String id) {
+        ParseQuery<Album> query = ParseQuery.getQuery(Album.class);
+        query.fromPin(LABEL_ALBUM);
+        query.whereEqualTo(Album.LOCAL_ID, id);
+        try {
+            return query.getFirst();
+        } catch (ParseException e) {
+
+            e.printStackTrace();
+            return null;
+
+        }
+//        query.getInBackground(String.valueOf(id), getCallback);
+    }
+
+    /**
+     * find 앨범의 사진 수
+     */
+
+    public static void findPinnedAlbumPicturesSizeInBackground(Album album,CountCallback countCallback) throws JSONException {
+        if(album.getType()==Album.SEND_ALBUM_TYPE_VALUE) {
+            ParseAPI.findPinnedSendAlbumPictureCountInBackground(album, countCallback);
+        }
+        else if(album.getType()==Album.RECEIVE_ALBUM_TYPE_VALUE)
+        {
+            ParseAPI.findPinnedReceiveAlbumPictureCountInBackground(album, countCallback);
+        }
+
+    }
+
+    /**
+     * find 앨범의 사진들
+     */
+    public static void findPinnedAlbumPictruesInBackground(int page, Album album, FindCallback findCallback) throws JSONException {
+        if(album.getType()==Album.SEND_ALBUM_TYPE_VALUE) {
+
+            ParseAPI.findPinnedSendAlbumPictureInBackground(page, Constants.NUM_LOAD_PICTURE, album, findCallback);
+        }
+        else if(album.getType()==Album.RECEIVE_ALBUM_TYPE_VALUE)
+        {
+            ParseAPI.findPinnedReceiveAlbumPictureInBackground(page, Constants.NUM_LOAD_PICTURE, album, findCallback);
+        }
+    }
+
+    /**
+     * find 보낸 앨범의 사진
+     */
+    public static  void findPinnedSendAlbumPictureInBackground(int page, int num, Album sendAlbum, FindCallback<Picture> findCallback) throws JSONException {
+
+        Log.d(TAG,"findPinnedSendAlbumPictureInBackground");
+        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+        query.whereContainsAll(Picture.PHONE_LIST, sendAlbum.getPhoneArrayList());
+        query.whereEqualTo(Picture.CREATED_BY,ParseUser.getCurrentUser());
+        query.whereEqualTo(Picture.PHONE_LIST_SIZE, sendAlbum.getPhoneListSize());
+        query.whereEqualTo(Picture.PHOTO_SYNCHED, true);
+        query.whereGreaterThan("updatedAt", Util.getAvailablePictureLastDate());
+        query.orderByDescending("updatedAt");
+        query.setSkip((page - 1) * num);
+        query.setLimit(num);
+        query.fromPin(LABEL_PICTURE);
+        query.findInBackground(findCallback);
+    }
+
+
+    /**
+     * find 보낸 사진 앨범의 사진 갯수
+     */
+    public static void findPinnedSendAlbumPictureCountInBackground(Album sendAlbum,CountCallback countCallback) throws JSONException {
+        Log.d(TAG, "findPinnedSendAlbumPictureCountInBackground");
+        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+        query.whereContainsAll(Picture.PHONE_LIST, sendAlbum.getPhoneArrayList());
+        query.whereEqualTo(Picture.CREATED_BY, ParseUser.getCurrentUser());
+        query.whereEqualTo(Picture.PHONE_LIST_SIZE, sendAlbum.getPhoneListSize());
+        query.whereEqualTo(Picture.PHOTO_SYNCHED, true);
+        query.whereGreaterThan("updatedAt", Util.getAvailablePictureLastDate());
+        query.fromPin(LABEL_PICTURE);
+        query.countInBackground(countCallback);
+    }
+
+
+    /**
+     * find 받은 앨범의 사진
+     */
+    public static  void findPinnedReceiveAlbumPictureInBackground(int page, int num, Album album, FindCallback<Picture> findCallback) throws JSONException {
+
+        Log.d(TAG,"findPinnedReceiveAlbumPictureInBackground");
+        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+
+//        query.whereEqualTo(Picture.PHONE_LIST_SIZE, album.getPhoneListSize());
+        query.whereEqualTo(Picture.CREATED_BY, album.getSender());
+        query.whereEqualTo(Picture.PHOTO_SYNCHED, true);
+        query.whereGreaterThan("updatedAt", Util.getAvailablePictureLastDate());
+        query.orderByDescending("updatedAt");
+        query.setSkip((page - 1) * num);
+        query.setLimit(num);
+        query.fromPin(LABEL_PICTURE);
+        query.findInBackground(findCallback);
+    }
+
+
+    /**
+     *
+     * find 받은 사진 앨범의 사진 갯수
+     */
+    public static void findPinnedReceiveAlbumPictureCountInBackground(Album album,CountCallback countCallback) throws JSONException {
+        Log.d(TAG, "findPinnedReceiveAlbumPictureCountInBackground");
+        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+        query.whereEqualTo(Picture.CREATED_BY, album.getSender());
+//        query.whereEqualTo(Picture.PHONE_LIST_SIZE, album.getPhoneListSize());
+        query.whereEqualTo(Picture.PHOTO_SYNCHED, true);
+        query.whereGreaterThan("updatedAt", Util.getAvailablePictureLastDate());
+        query.fromPin(LABEL_PICTURE);
+        query.countInBackground(countCallback);
+    }
+
+    /**
+     * find 자동 다운로드를 하기 위한 사진들을 다운로드
+     */
+    public static void findAutoDownloadPicturesInBackground(FindCallback<Picture> callback)
+    {
+        Log.d(TAG, "findAutoDownloadPicturesInBackground");
+        // 받은 사진 앨범 중 autodownload true인 앨범들
+        ParseQuery<Album> albumQuery=ParseQuery.getQuery(Album.class);
+        albumQuery.fromPin(LABEL_ALBUM);
+        albumQuery.whereEqualTo(Album.AUTO_DOWNALOD, true);
+        albumQuery.whereEqualTo(Album.TYPE, Album.RECEIVE_ALBUM_TYPE_VALUE);
+        //해당 앨범의 사진 중 expire되지 않고 사진 등록되어있는 picture 불러옴
+        ParseQuery<Picture> pictureQuery=ParseQuery.getQuery(Picture.class);
+        pictureQuery.whereGreaterThan("updatedAt", Util.getAvailablePictureLastDate());
+        pictureQuery.whereEqualTo(Picture.PHOTO_SYNCHED, true);
+        pictureQuery.whereEqualTo(Picture.SAVED, false);
+        pictureQuery.whereMatchesQuery(Picture.ALBUM, albumQuery);
+
+        pictureQuery.fromPin(LABEL_PICTURE);
+        pictureQuery.findInBackground(callback);
+    }
+
+    /**
+     * find 자동 다운로드를 하기 위한 사진들을 다운로드
+     */
+    public static List<Picture> findAutoDownloadPictures()
+    {
+        Log.d(TAG, "findAutoDownloadPicturesInBackground");
+        // 받은 사진 앨범 중 autodownload true인 앨범들
+        ParseQuery<Album> albumQuery=ParseQuery.getQuery(Album.class);
+        albumQuery.fromPin(LABEL_ALBUM);
+        albumQuery.whereEqualTo(Album.AUTO_DOWNALOD, true);
+        albumQuery.whereEqualTo(Album.TYPE,Album.RECEIVE_ALBUM_TYPE_VALUE);
+        //해당 앨범의 사진 중 expire되지 않고 사진 등록되어있는 picture 불러옴
+        ParseQuery<Picture> pictureQuery=ParseQuery.getQuery(Picture.class);
+        pictureQuery.whereGreaterThan("updatedAt", Util.getAvailablePictureLastDate());
+        pictureQuery.whereEqualTo(Picture.PHOTO_SYNCHED, true);
+        pictureQuery.whereEqualTo(Picture.SAVED, false);
+        pictureQuery.whereMatchesQuery(Picture.ALBUM, albumQuery);
+        pictureQuery.include(Picture.ALBUM);
+
+        pictureQuery.fromPin(LABEL_PICTURE);
+        try {
+            return pictureQuery.find();
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    //개인에게 받은 사진 목록 받아오기
+    public static void getPicturesByMe(int page,int num,FindCallback<Picture> findCallback)  {
+        ParseQuery<Picture> query=ParseQuery.getQuery(Picture.class);
+        query.whereEqualTo("friendList", ParseUser.getCurrentUser().getObjectId());
+        query.whereEqualTo("hasPhoto", true);
+        query.whereEqualTo("photoSynched", true);
+        query.orderByDescending("createdAt");
+        query.setSkip((page - 1) * num);
+        query.setLimit(num);
+        query.findInBackground(findCallback);
+    }
+
+
+    /**
+     * Notification 목록 불러옴
+     */
+    public static void findNotificationOrderByDate(int page,int num,FindCallback<Notification> findCallback)
+    {
+        Log.d(TAG, "findNotificationOrderByDate");
+        ParseQuery<Notification> query=ParseQuery.getQuery(Notification.class);
+        query.fromPin(LABEL_NOTIFICATION);
+        query.orderByDescending(Notification.DATE);
+        query.setSkip((page - 1) * num);
+        query.setLimit(num);
+        query.include(Notification.SEND_USER);
+        query.include(Notification.PICTURE);
+        query.findInBackground(findCallback);
+    }
+
+    /**
+     * 앨범 화면 들어갈 떄 호출
+     * 앨범 isNew -> true
+     * 관련 notification -> true
+     */
+    public static void resetAlbumIsNew(final Context context,Album album)
+    {
+        //앨범 확인 반영
+        album.setIsNew(false);
+        try {
+            album.pin(ParseAPI.LABEL_ALBUM);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if(album.getType()==Album.RECEIVE_ALBUM_TYPE_VALUE) {
+            //관련 notification -> true
+            ParseQuery<Notification> query = ParseQuery.getQuery(Notification.class);
+            query.fromPin(ParseAPI.LABEL_NOTIFICATION);
+            query.whereEqualTo(Notification.ALBUM, album);
+            query.findInBackground(new FindCallback<Notification>() {
+                @Override
+                public void done(List<Notification> list, ParseException e) {
+                    if (e == null) {
+                        for (int i = 0; i < list.size(); i++) {
+                            list.get(i).setIsNew(false);
+                        }
+                        ParseObject.pinAllInBackground(ParseAPI.LABEL_NOTIFICATION, list);
+                    } else {
+                        ParseAPI.erroHandling(context, e);
+                    }
+                }
+            });
+        }
+
+    }
+
+
+
+//    /**
+//     * 앨범 화면 들어갈 떄 호출
+//     * 앨범 isNew -> true
+//     * 관련 notification -> true
+//     */
+//    public static void resetPictureIsNew()
+//    {
+//
+//    }
+
 }
 

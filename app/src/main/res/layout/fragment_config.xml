@@ -82,7 +82,7 @@
     </RelativeLayout>
 
     <TextView
-        android:text="@string/basic_config"
+        android:text="@string/basic_auto_download_config"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

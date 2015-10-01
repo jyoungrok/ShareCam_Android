@@ -1,21 +1,15 @@
 package com.claude.sharecam.parse;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.dialog.ListDialog;
 import com.claude.sharecam.dialog.MyDialogBuilder;
-import com.claude.sharecam.main.MainActivity;
 import com.claude.sharecam.util.ImageManipulate;
 import com.claude.sharecam.util.ImageSelectFragment;
 import com.kbeanie.imagechooser.api.ChosenImage;
@@ -134,7 +128,7 @@ public class ProfileSelectFragment extends ImageSelectFragment {
                     public void done() {
 //                        setModifyProfileImg(ImageManipulate.getThumbnailFromPath(image.getFilePathOriginal(),Constants.PROFILE_THUM_SIZE));
 
-                        Log.d(TAG,"upload picture success");
+                        Log.d(TAG,"upload PICTURE success");
                             setModifyProfileImg();
 //                        modifyProfileImg.setImageBitmap(ImageManipulate.byteArrayToBitmap(((User)ParseUser.getCurrentUser()).getProfileFile().));
                     }

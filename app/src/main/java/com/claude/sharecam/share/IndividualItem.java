@@ -1,4 +1,4 @@
-package com.claude.sharecam.orm;
+package com.claude.sharecam.share;
 
 import android.content.Context;
 import android.net.Uri;
@@ -20,6 +20,7 @@ import java.sql.SQLException;
 @DatabaseTable(tableName = "IndividualItem")
 public class IndividualItem  implements Serializable {
 
+    public long recordId;
     @DatabaseField
     public boolean isShortCut;//shortcut을 위한 item인지 여부
     public static final int CONTACT=1;
@@ -68,7 +69,8 @@ public class IndividualItem  implements Serializable {
 
     }
     //얀락처
-    public IndividualItem(String personName, String contactProfile, String phoneNumber) {
+    public IndividualItem(String personName, String contactProfile, String phoneNumber,long recordId) {
+        this.recordId=recordId;
         this.personName = personName;
         this.contactProfile = contactProfile;
         this.phoneNumber=phoneNumber;

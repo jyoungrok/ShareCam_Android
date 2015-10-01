@@ -1,7 +1,5 @@
 package com.claude.sharecam.config;
 
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -67,13 +65,13 @@ public class AlarmFragment extends Fragment {
                 switch(alarmMode)
                 {
                     case Constants.PREF_ALARM_MODE_SOUND_AND_VIBRATION:
-                        Util.setAlarmMode(getActivity(),Constants.PREF_ALARM_MODE_SOUND);
-                        break;
-                    case Constants.PREF_ALARM_MODE_SOUND:
-                        Util.setAlarmMode(getActivity(),Constants.PREF_ALARM_MODE_VIBRATION);
-                        break;
-                    case Constants.PREF_ALARM_MODE_VIBRATION:
                         Util.setAlarmMode(getActivity(),Constants.PREF_ALARM_MODE_SOUND_AND_VIBRATION);
+                        break;
+                    case Constants.PREF_ALARM_MODE_VIBRATE:
+                        Util.setAlarmMode(getActivity(),Constants.PREF_ALARM_MODE_VIBRATE);
+                        break;
+                    case Constants.PREF_ALARM_MODE_MUTE:
+                        Util.setAlarmMode(getActivity(),Constants.PREF_ALARM_MODE_MUTE);
                         break;
                 }
 
@@ -110,11 +108,11 @@ public class AlarmFragment extends Fragment {
             case Constants.PREF_ALARM_MODE_SOUND_AND_VIBRATION:
                 alarmModeTxt.setText(getString(R.string.sound_and_vibration));
                 break;
-            case Constants.PREF_ALARM_MODE_SOUND:
-                alarmModeTxt.setText(getString(R.string.sound));
-                break;
-            case Constants.PREF_ALARM_MODE_VIBRATION:
+            case Constants.PREF_ALARM_MODE_VIBRATE:
                 alarmModeTxt.setText(getString(R.string.vibration));
+                break;
+            case Constants.PREF_ALARM_MODE_MUTE:
+                alarmModeTxt.setText(getString(R.string.mute));
                 break;
         }
     }

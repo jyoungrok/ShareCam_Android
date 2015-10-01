@@ -8,12 +8,37 @@
         android:src="@mipmap/ic_action_accept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+    <Spinner
+        android:layout_centerVertical="true"
+        android:visibility="gone"
+        android:id="@+id/actionbarSpinner"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"></Spinner>
+    <TextView
+        android:layout_centerVertical="true"
+        android:id="@+id/actionbarTitle"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <ImageView
         android:layout_centerVertical="true"
         android:src="@mipmap/ic_action_accept"
         android:layout_alignParentRight="true"
         android:id="@+id/actionItem1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />e
+        android:layout_height="wrap_content" />
+
+    <ImageView
+        android:visibility="gone"
+        android:layout_centerVertical="true"
+        android:src="@mipmap/ic_action_accept"
+        android:layout_toLeftOf="@id/actionItem1"
+        android:id="@+id/actionItem2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+
 
 </RelativeLayout>

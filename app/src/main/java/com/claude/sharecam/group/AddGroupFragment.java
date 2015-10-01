@@ -12,6 +12,7 @@ import android.widget.EditText;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.share.IndividualFragment;
+import com.claude.sharecam.util.ActionBarUtil;
 //import com.claude.sharecam.share.PersonListFragment;
 
 public class AddGroupFragment extends Fragment {
@@ -32,7 +33,7 @@ public class AddGroupFragment extends Fragment {
         groupName=(GroupName)getActivity();
 //        addedItems=new ArrayList<IndividualItem>();
 
-        Util.setActionbarItem_1(getActivity(), new View.OnClickListener() {
+        ActionBarUtil.setActionbarItem_1(getActivity(), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (groupNameEditTxt.getText().length() != 0) {

@@ -117,6 +117,8 @@ public class ImageActivity extends ActionBarActivity {
             {
                 loading=true;
                 Log.d("jyr", "load extra images currentPage="+currentPage);
+
+
                 ParseAPI.getPicturesByMe(currentPage + 1, Constants.NUM_LOAD_PICTURE, new FindCallback<Picture>() {
                     @Override
                     public void done(List<Picture> pictureList, ParseException e) {

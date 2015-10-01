@@ -8,9 +8,10 @@ import android.util.Log;
 import android.view.View;
 
 import com.claude.sharecam.R;
+import com.claude.sharecam.parse.Contact;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.SerializableParseFile;
-import com.claude.sharecam.orm.IndividualItem;
+import com.claude.sharecam.share.IndividualItem;
 import com.claude.sharecam.signup.SignUpActivity;
 import com.parse.DeleteCallback;
 import com.parse.ParseException;
@@ -74,7 +75,7 @@ public class MyDialogBuilder {
         confirmDialog.show(fm,"ConfirmDialog");
     }
 
-    public static void showProfileDialog(Context context,FragmentManager fm,IndividualItem individualItem)
+    public static void showProfileDialog(Context context,FragmentManager fm,Contact individualItem)
     {
         ProfileDialog profileDialog=new ProfileDialog();
         Bundle args=new Bundle();

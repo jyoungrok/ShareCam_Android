@@ -10,14 +10,23 @@ import com.parse.ParseUser;
 @ParseClassName("Group")
 public class Group extends ParseObject{
     public void setName(String name) {put("name",name);}
-    public void setPhoneId(String phone)
+    public void setPhoneList(String phone)
     {
-        addUnique( "phoneList",phone);
+        addUnique("phoneList",phone);
+
     }
-    public void setFriendId(String friend)
+    public void setUserList(User user)
     {
-        addUnique("friendList",friend);
+        addUnique("userList",user);
     }
+//    public void setPhoneId(String phone)
+//    {
+//        addUnique( "phoneList",phone);
+//    }
+//    public void setUserId(String friend)
+//    {
+//        addUnique("friendList",friend);
+//    }
     public void setCreatedBy(ParseUser user) { put("createdBy", user);}
     public String getName(){return getString("name");}
 }

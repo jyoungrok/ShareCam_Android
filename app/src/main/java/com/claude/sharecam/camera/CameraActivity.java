@@ -3,7 +3,6 @@ package com.claude.sharecam.camera;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -38,18 +37,40 @@ import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 //import com.claude.sharecam.TestActivity;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.main.MainActivity;
-import com.claude.sharecam.orm.DBHelper;
-import com.claude.sharecam.orm.IndividualItem;
+import com.claude.sharecam.main.AlbumActivity;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.share.ShareActivity;
+import com.claude.sharecam.share.ShareItem;
+
+import org.json.JSONException;
 
 public class CameraActivity extends ActionBarActivity {
 
 
     //intent에 shortcut여부 저장
+    /**
+     *  shortcut 관련 정보가 pendingIntent에 저장됨
+     */
+    /**
+     * boolean
+     * shortcut인지 여부
+     */
     public static final String IS_SHORTCUT="isShortCut";
-    public static final String SHORTCUT_LABEl ="shortCutIdentifier";//홈 화면 공유 대상 parse label
+    /**
+     * int
+     * shortcut 종류
+     *  1. 개인(연락처)
+     *  2. 그룹
+     */
+    public static final String SHORTCUT_TYPE="shortCutType";
+    public static final int INDIVIDUAL_SHORTCUT=0;
+    public static final int GROUP_SHORTCUT=1;
+    /**
+     * JSONArray
+     * INDIVIDUAL_SHORTCUT
+     * shortcut에서 공유설정한 대상들의 contact Id (contact class의  recordId)
+     */
+    public static final String CONTACT_RECORD_ID_LIST ="contactRecordIdList";//홈 화면 공유 대상 parse label
 
 
 //    private static boolean takingTimerPicture;
@@ -85,7 +106,10 @@ public class CameraActivity extends ActionBarActivity {
     //사진 여러장 찍기 모드에서 저장한 이미지들의 경로
     private ArrayList<String> arItem;
     private ArrayList<byte[]> contItem;//연속 사진 촬영 시 촬영한 사진 임시 저장
-    private List<IndividualItem> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
+//    private List<Contact> spItems;//촬영 공유 개인 (연락처 + 쉐어캠 친구) 리스트
+    private ShareItem shareItem;
+//    private List<String> shareUserList;//공유 대상 사용자 objectId
+//    private List<String> sharePhoneList;//공유 대상 사용자 전화번호
 
     Context context;
     Activity activity;
@@ -117,7 +141,7 @@ public class CameraActivity extends ActionBarActivity {
             int cameraId = CameraFunction.findBackFacingCamera();
             if (cameraId >= 0) {
                 //open the backFacingCamera
-                //set a picture callback
+                //set a PICTURE callback
                 //refresh the preview
                 cameraSetting.setCameraFront(false);
 
@@ -129,7 +153,7 @@ public class CameraActivity extends ActionBarActivity {
             int cameraId = CameraFunction.findFrontFacingCamera();
             if (cameraId >= 0) {
                 //open the backFacingCamera
-                //set a picture callback
+                //set a PICTURE callback
                 //refresh the preview
 
                 cameraSetting.setCameraFront(true);
@@ -148,7 +172,7 @@ public class CameraActivity extends ActionBarActivity {
 
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-                //make a new picture file
+                //make a new PICTURE file
                 File pictureFile = CameraFunction.getOutputMediaFile();
 
                 if (pictureFile == null) {
@@ -203,7 +227,8 @@ public class CameraActivity extends ActionBarActivity {
 
                     case Constants.PREF_CAMERA_DIRECT_MODE:
                         try {
-                            ParseAPI.uploadPicture(context,spItems,savedFilePath);
+                            ParseAPI.uploadPicture(context,shareItem,savedFilePath);
+//                            ParseAPI.uploadPicture(context,sharePhoneList, shareUserList,savedFilePath);
                         } catch (SQLException e) {
                             e.printStackTrace();
                         }
@@ -248,21 +273,39 @@ public class CameraActivity extends ActionBarActivity {
         }
     }
 
-    private void setSharePerson()
+    /**
+     * shortcut으로 activity가 실행되었는지 여부 확인
+     * shortcut에 의한 생성인 경우 preference에 shortcut의 공유 대상 id 설정
+     */
+    private void checkShortcut()
     {
         Intent intent=getIntent();
-        //홈화면 단축키로 들어온 경우
+        // 홈화면 단축키로 들어온 경우
         if(intent.getBooleanExtra(IS_SHORTCUT,false))
         {
-            String label=intent.getStringExtra(SHORTCUT_LABEl);
+            //개인 공유 설정
+            if(intent.getIntExtra(SHORTCUT_TYPE,INDIVIDUAL_SHORTCUT)==INDIVIDUAL_SHORTCUT) {
+                //공유대상 설정
+                Util.setShareIndividualWithString(this, intent.getStringExtra(CameraActivity.CONTACT_RECORD_ID_LIST));
+            }
         }
+        // 앱을 일반적으로 실행한 경우 -> 이전 공유 설정 불러옴
         else {
-//            spItems=ParseAPI.getSharePerson_Local(this);
             try {
-                spItems= DBHelper.getSharePerson(this);
-            } catch (SQLException e) {
+                shareItem=Util.getShareList(this);
+//                shareUserList =Util.getShareUserList(this);
+//                sharePhoneList=Util.getSharePhoneList(this);
+            } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+//            spItems=Util.getSharePhoneListth
+////            spItems=ParseAPI.getSharePerson_Local(this);
+//            try {
+//                spItems= DBHelper.getSharePerson(this);
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//            }
         }
 
     }
@@ -278,10 +321,12 @@ public class CameraActivity extends ActionBarActivity {
         getSupportActionBar().hide();
         //로그인 확인 해보기
         Util.checkLogin(this);
-        setSharePerson();
 
 
-//        startActivity(new Intent(this, TestActivity.class));
+
+//        startActivity(new In
+//
+// tent(this, TestActivity.class));
 
 
         //친구 목록 불러오기
@@ -310,7 +355,7 @@ public class CameraActivity extends ActionBarActivity {
 
         //쉐어캠 공유 목록 불러옴
 //        spItems=Util.getSharePersonList(this);
-
+        checkShortcut();
         orientationListener.enable();
 
         if (!CameraFunction.hasCamera(myContext)) {
@@ -531,7 +576,7 @@ public class CameraActivity extends ActionBarActivity {
     OnClickListener albumBtnListener=new OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent=new Intent(CameraActivity.this,MainActivity.class);
+            Intent intent=new Intent(CameraActivity.this,AlbumActivity.class);
             startActivity(intent);
 
         }
@@ -1160,7 +1205,7 @@ public class CameraActivity extends ActionBarActivity {
 //                        intent.putExtra(PictureModifyActivity.IMAGE_BYTE,ImageManipulate.getImage_byte(activity,cameraSetting.ratio,data,R.mipmap.logo, ImageManipulate.getRotate(orientationListener.getRememberedOrientation(),cameraSetting.cameraFront)));
             startActivity(intent);
 
-            //reset multiple picture mode
+            //reset multiple PICTURE mode
             multPictureAcceptBtn.setVisibility(View.GONE);
             arItem=new ArrayList<String >();
             resetLayout(MULT_PICUTRE_TEXT_LAYOUT);

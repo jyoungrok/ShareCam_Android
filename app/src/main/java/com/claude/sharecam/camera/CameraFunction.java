@@ -94,7 +94,7 @@ public class CameraFunction {
     //사진 저장
     public static String savePicture(Activity activity,CameraSetting cameraSetting,byte[] data,int orientation)
     {
-        //make a new picture file
+        //make a new PICTURE file
         File pictureFile = CameraFunction.getOutputMediaFile();
 
         if (pictureFile == null) {
@@ -126,7 +126,7 @@ public class CameraFunction {
     //연속 촬영 사진 저장
     public static String saveContPictrue(Activity activity,CameraSetting cameraSetting,ArrayList<byte[]> dataItem,int orientation)
     {
-        //make a new picture file
+        //make a new PICTURE file
         File pictureFile = CameraFunction.getOutputMediaFile();
 
         if (pictureFile == null) {

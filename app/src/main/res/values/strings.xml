@@ -27,12 +27,17 @@
     <string name="invalid_phone">전화번호가 옳지 않습니다.</string>
     <string name="phone_already_exist">전화번호로 가입한 회원이 이미 존재합니다.</string>
     <string name="continuous_attempts_not_allowed">이미 요청하였습니다. 1분 후에 다시 시도해 주세요</string>
+    <string name="save_picture_success">사진 저장이 완료되었습니다.</string>
+    <string name="save_picture_fail">사진 저장을 실패하였습니다.</string>
     <!--<string name="facebook_invalid_access_token">페이스북 로그인에 실패하였습니다.</string>-->
 
     <!-- toast-->
     <string name="not_availalbe_click_while_taking_picture_toast">촬영 중에는 클릭할 수 없습니다.</string>
     <string name="you_should_fill_out">입력을 완료해야 합니다.</string>
     <string name="phone_format_invalid">전화번호의 형식이 올바르지 않습니다.</string>
+    <string name="all_pictures_exipired">모든 사진들이 만료되었습니다.</string>
+    <string name="start_download">다운로드를 시작합니다.</string>
+
     <!-- facebook -->
     <string name="facebook_app_id">912014918837079</string>
 
@@ -72,12 +77,17 @@
     <string name="title_activity_upload">UploadActivity</string>
 
 
-    <!-- MainActivity -->
+    <!-- AlbumActivity -->
 
     <!--notification-->
     <string name="uploading_and_standby">업로드/대기</string>
     <string name="success">완료</string>
     <string name="fail">실패</string>
+    <string name="notification_uploading_state">개가 업로드 중입니다.</string>
+    <string name="notification_upload_fail_state">개가 업로드 실패하였습니다.</string>
+    <string name="notification_upload_standby_state">개가 업로드 대기 중 입니다.</string>
+    <string name="notification_upload_success_state">모두 업로드 완료되었습니다.</string>
+
     <!-- UploadingActivity -->
 
     <string name="uploading">업로딩</string>
@@ -88,14 +98,19 @@
     <string name="success_uploading_state">업로드 성공</string>
     <string name="finished_uploading_state">업로드 완료</string>
     <string name="title_activity_add_group">AddGroupActivity</string>
+    <string name="share_contact_num_transfer">개의 연락처에 전송 </string>
+    <string name="share_group_num_transfer">개의 그룹에 전송</string>
+    <string name="delete_all_success_upload">전송 완료 삭제</string>
 
-    <!-- ConfigFragment -->
-    <string name="basic_config">기본 설정</string>
+    <!-- Config -->
+    <string name="basic_auto_download_config">기본 자동 저장 활성화</string>
     <string name="individual_info">개인 정보</string>
     <string name="alarm_config">알림 설정</string>
-    <string name="auto_save">자동 저장</string>
+    <string name="auto_down">자동 저장</string>
     <string name="auto_save_config">자동 저장 설정</string>
     <string name="auto_save_mode">자동 저장 모드</string>
+    <string name="auto_download_individual">새로운 개인 앨범 자동 저장</string>
+    <string name="auto_download_group">새로운 그룹 앨범 자동 저장</string>
     <string name="config_account">계정 설정</string>
     <string name="registered">등록됨</string>
     <string name="not_registered">등록 안됨</string>
@@ -107,10 +122,11 @@
     <string name="alarm">알림</string>
     <string name="alarm_mode">알림 모드</string>
     <string name="sound_and_vibration">소리와 진동</string>
-    <string name="sound">소리</string>
     <string name="vibration">진동</string>
+    <string name="mute">무음</string>
     <string name="only_wifi">Wifi에서만</string>
     <string name="whenever">항상</string>
+    <string name="no_config">설정 안됨</string>
     <string name="individual_and_group">개인, 그룹</string>
     <string name="individual">개인</string>
     <string name="group">그룹</string>
@@ -122,5 +138,25 @@
     <!--dialog -->
     <string name="sign_out_dialog_text">회원 탈퇴시 공유 사진, 그룹 목록 등 모두 삭제됩니다.</string>
     <string name="title_activity_image_view">ImageViewActivity</string>
+
+
+
+    <!-- Notification -->
+    <string name="notification_got_picture">님꼐서 사진을 공유하였습니다.</string>
+
+    <!-- actionbar title -->
+    <string name="title_configuration">설정</string>
+    <string name="title_notification">알림</string>
+
+    <!-- album config -->
+    <string name="member">멤버</string>
+    <string name="shortcut_icon">바로가기 아이콘</string>
+    <string name="group_config">그룹 설정</string>
+    <string name="all_download">모두 저장</string>
+    <string name="leave_album">앨범 나가기</string>
+
+    <!-- word -->
+    <string name="download">다운로드</string>
+    <string name="stop">중지</string>
 
 </resources>

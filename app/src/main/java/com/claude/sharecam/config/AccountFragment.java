@@ -1,8 +1,6 @@
 package com.claude.sharecam.config;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -15,17 +13,12 @@ import android.widget.TextView;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.main.MainActivity;
+import com.claude.sharecam.main.AlbumActivity;
 import com.claude.sharecam.parse.ParseAPI;
-import com.claude.sharecam.parse.User;
-import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
-import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-
-import java.util.ArrayList;
 
 import bolts.Task;
 
@@ -74,7 +67,7 @@ public class AccountFragment extends Fragment {
         accountPhoneTxt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Util.startFragment(getFragmentManager(),R.id.mainContainer,new ModifyPhoneFragment(),true,null);
+                Util.startFragment(getFragmentManager(),R.id.albumContainer,new ModifyPhoneFragment(),true,null);
             }
         });
 
@@ -84,7 +77,7 @@ public class AccountFragment extends Fragment {
         accountFacebookLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
+                ((AlbumActivity)getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
                 if(!ParseFacebookUtils.isLinked(ParseUser.getCurrentUser()))
                 {
 
@@ -99,7 +92,7 @@ public class AccountFragment extends Fragment {
                             else{
                                 ParseAPI.erroHandling(getActivity(),ex);
                             }
-                            ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                            ((AlbumActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                         }
                     });
                     Log.d(TAG, "test Facebook!");
@@ -118,7 +111,7 @@ public class AccountFragment extends Fragment {
                                 ParseAPI.erroHandling(getActivity(), ex);
                             }
 
-                            ((MainActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+                            ((AlbumActivity) getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
                         }
                     });
                 }

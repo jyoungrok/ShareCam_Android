@@ -66,7 +66,7 @@
 //            public void onClick(View v) {
 //                ParseQuery<Test> query=ParseQuery.getQuery(Test.class);
 //                query.whereEqualTo("objectId",((EditText)findViewById(R.id.objectId)).getText().toString());
-//                query.findInBackground(new FindCallback<Test>() {
+//                query.findPinnedSendAlbumInBackground(new FindCallback<Test>() {
 //                    @Override
 //                    public void done(List<Test> list, com.parse.ParseException e) {
 //                        if(list.size()!=0 && e==null)

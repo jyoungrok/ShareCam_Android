@@ -28,6 +28,7 @@ import com.claude.sharecam.Util;
 import com.claude.sharecam.api.ErrorCode;
 import com.claude.sharecam.dialog.MyDialogBuilder;
 import com.claude.sharecam.dialog.SimpleDialog;
+import com.claude.sharecam.parse.SCSaveCallback;
 import com.claude.sharecam.parse.User;
 import com.claude.sharecam.util.Country;
 import com.claude.sharecam.util.CountryMaster;
@@ -37,6 +38,7 @@ import com.parse.LogInCallback;
 import com.parse.ParseAnonymousUtils;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseInstallation;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
 
@@ -332,9 +334,20 @@ public class PhoneVerifyFragment extends Fragment {
 
                     ParseUser.becomeInBackground(sessionToken, new LogInCallback() {
                         public void done(ParseUser user, ParseException e) {
+                            Log.d(TAG, "become session");
                             if (user != null) {
-                                //preferance 세팅
-                                Util.startFragment(getFragmentManager(), R.id.signupContainer, new InputProfileSelectFragment(), false, InputProfileSelectFragment.TAG);
+
+                                //ParseInstallation에 현재 사용자 pointer field 갱
+                                ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+                                installation.put("user", user);
+                                installation.saveInBackground(new SCSaveCallback(getActivity(), new SCSaveCallback.Callback() {
+                                    @Override
+                                    public void done() {
+                                        //preferance 세팅
+                                        Util.startFragment(getFragmentManager(), R.id.signupContainer, new InputProfileSelectFragment(), false, InputProfileSelectFragment.TAG);
+                                    }
+                                }));
+
                             } else {
                                 // The token could not be validated.
                                 Util.showToast(getActivity(), ErrorCode.getToastMessageId(e));

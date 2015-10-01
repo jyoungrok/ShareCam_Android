@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.claude.sharecam.config.AutoSaveFragment">
+    tools:context="com.claude.sharecam.config.AutoDownloadFragment">
 
 
     <!-- 자동 저장 -->
@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <TextView
-            android:text="@string/auto_save"
+            android:text="@string/auto_down"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <ImageView
@@ -46,30 +46,67 @@
     </RelativeLayout>
 
 
-    <!-- 자동 저장 기본 설정 -->
+    <!-- 개인 자동 저장 설정 -->
     <RelativeLayout
-        android:id="@+id/basicAutoSaveLayout"
+        android:id="@+id/autoDownloadIndividual"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
         <TextView
-            android:text="@string/basic_config"
+            android:text="@string/auto_download_individual"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-
         <ImageView
-            android:id="@+id/basicAutoSaveImg"
-            android:src="@mipmap/ic_action_accept"
+            android:id="@+id/autoDownloadIndividualImg"
+            android:src="@drawable/on_off_btn"
             android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
+    </RelativeLayout>
+
+
+    <!-- 자동 저장 모드 -->
+    <RelativeLayout
+        android:id="@+id/autoDownloadGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
         <TextView
-            android:id="@+id/basicAutoSaveTxt"
-            android:text="@string/only_wifi"
-            android:layout_toLeftOf="@id/basicAutoSaveImg"
+            android:text="@string/auto_download_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/autoDownloadGroupImg"
+            android:src="@drawable/on_off_btn"
+            android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
     </RelativeLayout>
+
+    <!-- 자동 저장 기본 설정 -->
+    <!--<RelativeLayout-->
+        <!--android:id="@+id/basicAutoSaveLayout"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content">-->
+
+        <!--<TextView-->
+            <!--android:text="@string/basic_auto_download_config"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content" />-->
+
+        <!--<ImageView-->
+            <!--android:id="@+id/basicAutoSaveImg"-->
+            <!--android:src="@mipmap/ic_action_accept"-->
+            <!--android:layout_alignParentRight="true"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content" />-->
+
+        <!--<TextView-->
+            <!--android:id="@+id/basicAutoSaveTxt"-->
+            <!--android:text="@string/only_wifi"-->
+            <!--android:layout_toLeftOf="@id/basicAutoSaveImg"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content" />-->
+
+    <!--</RelativeLayout>-->
 </LinearLayout>

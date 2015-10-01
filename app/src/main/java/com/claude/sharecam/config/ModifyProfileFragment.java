@@ -11,17 +11,10 @@ import android.widget.TextView;
 import com.claude.sharecam.Constants;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
-import com.claude.sharecam.main.MainActivity;
-import com.claude.sharecam.parse.ParseAPI;
+import com.claude.sharecam.main.AlbumActivity;
 import com.claude.sharecam.parse.ProfileSelectFragment;
-import com.claude.sharecam.parse.SCSaveCallback;
 import com.claude.sharecam.parse.User;
-import com.claude.sharecam.util.ImageManipulate;
-import com.claude.sharecam.util.ImageSelectFragment;
-import com.kbeanie.imagechooser.api.ChosenImage;
 import com.kbeanie.imagechooser.api.ImageChooserManager;
-import com.parse.GetDataCallback;
-import com.parse.ParseException;
 import com.parse.ParseUser;
 
 public class ModifyProfileFragment extends ProfileSelectFragment implements ProfileSelectFragment.ModifyProfileProgress {
@@ -97,7 +90,7 @@ public class ModifyProfileFragment extends ProfileSelectFragment implements Prof
         modifyProfileBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
+                ((AlbumActivity)getActivity()).setProgressLayout(Constants.PROGRESS_AND_LAYOUT_VISIBLE);
                 chooseImage();
             }
         });
@@ -106,7 +99,7 @@ public class ModifyProfileFragment extends ProfileSelectFragment implements Prof
             @Override
             public void onClick(View v) {
 
-                Util.startFragment(getFragmentManager(),R.id.mainContainer,new ModifyUserNameFragment(),true,null);
+                Util.startFragment(getFragmentManager(),R.id.albumContainer,new ModifyUserNameFragment(),true,null);
             }
         });
     }
@@ -120,7 +113,7 @@ public class ModifyProfileFragment extends ProfileSelectFragment implements Prof
 //                public void done(byte[] bytes, ParseException e) {
 //                    if (e == null) {
 //                        modifyProfileImg.setImageBitmap(ImageManipulate.byteArrayToBitmap(bytes));
-//                        ((MainActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
+//                        ((AlbumActivity)getActivity()).setProgressLayout(Constants.PROGRESS_INVISIBLE);
 //                    } else {
 //                        ParseAPI.erroHandling(getActivity(), null);
 //                    }
@@ -131,7 +124,7 @@ public class ModifyProfileFragment extends ProfileSelectFragment implements Prof
 
     @Override
     public void setProgressLayout(int mode) {
-        ((MainActivity)getActivity()).setProgressLayout(mode);
+        ((AlbumActivity)getActivity()).setProgressLayout(mode);
     }
 //
 //    @Override
@@ -140,7 +133,7 @@ public class ModifyProfileFragment extends ProfileSelectFragment implements Prof
 //        super.onActivityResult(requestCode, resultCode, data);
 //        //사진 선택 -> avairy 편집화면
 //        if (resultCode == getActivity().RESULT_OK && (requestCode == ChooserType.REQUEST_PICK_PICTURE || requestCode == ChooserType.REQUEST_CAPTURE_PICTURE)) {
-//            Log.d(TAG,"modify picture -> avairy");
+//            Log.d(TAG,"modify PICTURE -> avairy");
 //            Util.startAvairy(getActivity(), data);
 //        }
 //        //사진편집완료

@@ -16,9 +16,9 @@ import android.widget.TextView;
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
 import com.claude.sharecam.main.ImageViewActivity;
+import com.claude.sharecam.parse.Contact;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.SerializableParseFile;
-import com.claude.sharecam.orm.IndividualItem;
 import com.claude.sharecam.util.ImageManipulate;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
@@ -32,7 +32,7 @@ public class ProfileDialog extends DialogFragment {
     public static final String CONTAINER_ID="containerId";//fragment가 보여지는 view  id
 
 //    int containerId;
-    IndividualItem individualItem;
+    Contact individualItem;
 
     ImageView dialogProfileImg;
     TextView dialogUserName;
@@ -57,7 +57,7 @@ public class ProfileDialog extends DialogFragment {
         dialogAddToHomeBtn=(ImageView)root.findViewById(R.id.dialogAddToHomeBtn);
 
         Bundle args=getArguments();
-        individualItem = (IndividualItem) args.getSerializable(INDIVIDUAL_ITEM);
+        individualItem = (Contact) args.getSerializable(INDIVIDUAL_ITEM);
         //clear 처리 하지 않으면 savedInstanceState에 bundle이 들어가는데 serializable을 넘겨주지 못해 에러 발생한다.
         args.clear();
 //        containerId=args.getInt(CONTAINER_ID);
@@ -73,11 +73,11 @@ public class ProfileDialog extends DialogFragment {
 
         //쉐어캠 친구인 경우
 
-        if(individualItem.MODE==IndividualItem.FRIEND)
+        if(individualItem.getFriendUser()!=null)
         {
-            if(individualItem.serializableFriendThumProfileFile.getParseFile()!=null)
+            if(individualItem.getFriendUser().getThumProfileFile()!=null)
             {
-                individualItem.serializableFriendThumProfileFile.getParseFile().getDataInBackground(new GetDataCallback() {
+                individualItem.getFriendUser().getThumProfileFile().getDataInBackground(new GetDataCallback() {
                     @Override
                     public void done(byte[] bytes, ParseException e) {
                         if (e == null) {
@@ -93,19 +93,25 @@ public class ProfileDialog extends DialogFragment {
                     public void onClick(View v) {
                         Intent intent=new Intent(getActivity(), ImageViewActivity.class);
                         Bundle args=new Bundle();
-                        SerializableParseFile serializableParseFile =new SerializableParseFile(individualItem.serializableFriendProfileFile.getParseFile());
+                        SerializableParseFile serializableParseFile =new SerializableParseFile(individualItem.getFriendUser().getThumProfileFile());
                         MyDialogBuilder.showProfileImageDialog(getActivity().getSupportFragmentManager(),serializableParseFile);
                     }
                 });
                 dialogInviteLayout.setVisibility(View.GONE);
+                dialogAddToHomeBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Util.addIndividualShortcut(getActivity(),getFragmentManager(),individualItem);
+                    }
+                });
             }
         }
 
         //연락처인 경우
-        else if(individualItem.MODE==IndividualItem.CONTACT)
+        else
         {
-            if(individualItem.contactProfile!=null) {
-                dialogProfileImg.setImageURI(Uri.parse(individualItem.contactProfile));
+            if(individualItem.getPinContactPhotoUri()!=null) {
+                dialogProfileImg.setImageURI(Uri.parse(individualItem.getPinContactPhotoUri()));
             }
             dialogInviteLayout.setVisibility(View.VISIBLE);
             dialogInviteBtn.setOnClickListener(new View.OnClickListener() {
@@ -113,7 +119,7 @@ public class ProfileDialog extends DialogFragment {
                 public void onClick(View v) {
 
                     Intent sendIntent = new Intent(Intent.ACTION_VIEW);
-                    sendIntent.putExtra("address",individualItem.phoneNumber);
+                    sendIntent.putExtra("address",individualItem.getPhone());
                     sendIntent.putExtra("sms_body", getString(R.string.sms_invite_msg));
                     sendIntent.setType("vnd.android-dir/mms-sms");
                     startActivity(sendIntent);
@@ -129,7 +135,7 @@ public class ProfileDialog extends DialogFragment {
 
         }
 
-        dialogUserName.setText(individualItem.personName);
+        dialogUserName.setText(individualItem.getPinContactName());
 
     }
 

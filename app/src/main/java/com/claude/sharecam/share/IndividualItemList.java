@@ -1,7 +1,5 @@
 package com.claude.sharecam.share;
 
-import com.claude.sharecam.orm.IndividualItem;
-
 import java.util.ArrayList;
 
 /**

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="album_spinner">
+        <item >공유한 사진</item>
+        <item>공유 받은 사진</item>
+    </string-array>
+</resources>

@@ -3,6 +3,7 @@ package com.claude.sharecam.config;
 import android.os.Bundle;
 
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import com.claude.sharecam.dialog.MyDialogBuilder;
 import com.claude.sharecam.main.MainActivity;
 import com.claude.sharecam.parse.ParseAPI;
 import com.claude.sharecam.parse.User;
+import com.claude.sharecam.util.ActionBarUtil;
 import com.claude.sharecam.util.ImageManipulate;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
@@ -63,6 +65,12 @@ public class ConfigFragment extends Fragment {
         return root;
     }
 
+    private void initActionBar()
+    {
+        ActionBarUtil.initActionbar((ActionBarActivity) getActivity(), getString(R.string.title_configuration));
+        ActionBarUtil.resetActionbarItem_1(getActivity());
+        ActionBarUtil.resetActionbarItem_2(getActivity());
+    }
     private void init(){
         if(((User)ParseUser.getCurrentUser()).getThumProfileFile()!=null) {
             ((User) ParseUser.getCurrentUser()).getThumProfileFile().getDataInBackground(new GetDataCallback() {
@@ -109,7 +117,7 @@ public class ConfigFragment extends Fragment {
         autoSaveLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Util.startFragment(getFragmentManager(),R.id.mainContainer,new AutoSaveFragment(),true,null);
+                Util.startFragment(getFragmentManager(),R.id.mainContainer,new AutoDownloadFragment(),true,null);
             }
         });
 

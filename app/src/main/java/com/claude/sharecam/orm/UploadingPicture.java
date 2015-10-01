@@ -5,6 +5,7 @@ import android.content.Intent;
 
 import com.claude.sharecam.R;
 import com.claude.sharecam.Util;
+import com.claude.sharecam.share.ShareItem;
 import com.claude.sharecam.upload.UploadService;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
@@ -21,7 +22,12 @@ import java.util.List;
  * Created by Claude on 15. 7. 12..
  */
 @DatabaseTable(tableName = "UploadingPicture")
-public class UploadingPicture implements Serializable {
+public class UploadingPicture implements Serializable,Cloneable {
+
+    public UploadingPicture clone() throws CloneNotSupportedException {
+        UploadingPicture a = (UploadingPicture)super.clone();
+        return a;
+    }
 
     //upload
     public static final int FAILED_UPLOADING_STATE=-1;
@@ -37,10 +43,13 @@ public class UploadingPicture implements Serializable {
     String filePath;
     @DatabaseField
     int state;
-    @DatabaseField
-    int percent;
+//    @DatabaseField
+//    int percent;
     @DatabaseField
     String pictureId;
+
+    @DatabaseField(dataType = DataType.SERIALIZABLE)
+    ShareItem shareItem;
 
     @DatabaseField(columnName = "createdAt", dataType = DataType.DATE_STRING,
             format = "yyyy-MM-dd HH:mm:ss")
@@ -55,7 +64,7 @@ public class UploadingPicture implements Serializable {
     {
         this.filePath=filePath;
         state=STANDBY_UPLOADING_STATE;
-        percent=0;
+//        percent=0;
     }
 
     //현재 시간 설정
@@ -68,6 +77,9 @@ public class UploadingPicture implements Serializable {
     }
 
 
+
+
+
     public void setId(int id){this.id=id;}
     public void  setPictureId(String pictureId)
     {
@@ -78,11 +90,7 @@ public class UploadingPicture implements Serializable {
     {
         this.state=state;
     }
-
-    public void setPercent(int percent)
-    {
-        this.percent=percent;
-    }
+    public void setShareItem(ShareItem shareItem){this.shareItem=shareItem;}
 
     public void setFilePath(String filePath) {this.filePath=filePath;}
 
@@ -100,6 +108,7 @@ public class UploadingPicture implements Serializable {
         return state;
     }
 
+    public ShareItem getShareItem(){return shareItem;}
     public  String getStateName(Context context)
     {
         switch (state)
@@ -118,10 +127,10 @@ public class UploadingPicture implements Serializable {
         }
     }
 
-    public int getPercent()
-    {
-        return percent;
-    }
+//    public int getPercent()
+//    {
+//        return percent;
+//    }
 
 
 
@@ -185,7 +194,7 @@ public class UploadingPicture implements Serializable {
 //        update(context);
 //    }
 
-    //새로운 uploading picture db에 저장하고 broadcast
+    //새로운 uploading PICTURE db에 저장하고 broadcast
     public void createAndSendBR(Context context)
     {
         create(context);
